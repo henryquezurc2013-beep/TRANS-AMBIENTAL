@@ -7,6 +7,7 @@ export default function Estoque() {
   const [controles, setControles] = useState<Controle[]>([])
   const [loading, setLoading] = useState(true)
   const [busca, setBusca] = useState('')
+  const [filtro, setFiltro] = useState('TODOS')
 
   useEffect(() => {
     async function carregar() {
@@ -26,7 +27,13 @@ export default function Estoque() {
   const emUso      = containers.filter(c => c.status_operacional === 'EM USO').length
   const manutencao = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
 
-  const filtrado = containers.filter(c =>
+  const porFiltro = filtro === 'DISPONIVEL'
+    ? containers.filter(c => c.status_operacional === 'DISPONIVEL')
+    : filtro === 'EM USO'
+    ? containers.filter(c => c.status_operacional === 'EM USO')
+    : containers
+
+  const filtrado = porFiltro.filter(c =>
     c.id_container.toLowerCase().includes(busca.toLowerCase()) ||
     c.numero_container.toLowerCase().includes(busca.toLowerCase()) ||
     (clienteAtual[c.id_container] ?? '').toLowerCase().includes(busca.toLowerCase())
@@ -61,8 +68,21 @@ export default function Estoque() {
         ))}
       </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <input className="input-field" style={{ maxWidth: '280px' }} placeholder="Buscar container ou cliente..." value={busca} onChange={e => setBusca(e.target.value)} />
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.375rem' }}>
+          {[
+            { value: 'TODOS',     label: 'Todos'      },
+            { value: 'DISPONIVEL', label: 'Disponível' },
+            { value: 'EM USO',    label: 'Em Uso'     },
+          ].map(f => (
+            <button key={f.value} onClick={() => setFiltro(f.value)}
+              className={filtro === f.value ? 'btn-primary' : 'btn-secondary'}
+              style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <input className="input-field" style={{ maxWidth: '260px' }} placeholder="Buscar container ou cliente..." value={busca} onChange={e => setBusca(e.target.value)} />
       </div>
 
       {loading ? (
