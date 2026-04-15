@@ -40,6 +40,11 @@ jobs:
       - name: Create SPA .htaccess
         run: |
           {
+            echo '<IfModule mod_mime.c>'
+            echo '  AddType application/javascript .js .mjs'
+            echo '  AddType text/css .css'
+            echo '  AddType image/svg+xml .svg'
+            echo '</IfModule>'
             echo '<IfModule mod_rewrite.c>'
             echo '  RewriteEngine On'
             echo '  RewriteBase /'
@@ -47,6 +52,11 @@ jobs:
             echo '  RewriteCond %{REQUEST_FILENAME} !-f'
             echo '  RewriteCond %{REQUEST_FILENAME} !-d'
             echo '  RewriteRule . /index.html [L]'
+            echo '</IfModule>'
+            echo '<IfModule mod_headers.c>'
+            echo '  <FilesMatch "\.(js|mjs|css)$">'
+            echo '    Header set Cache-Control "no-cache"'
+            echo '  </FilesMatch>'
             echo '</IfModule>'
           } > dist/.htaccess
 
