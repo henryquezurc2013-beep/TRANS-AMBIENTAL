@@ -1,4 +1,6 @@
 
+name: Deploy to Hostinger
+
 on:
   push:
     branches: ["main"]
@@ -7,6 +9,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
+      FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
+      FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/public_html/' }}
 
     steps:
       - name: Checkout
@@ -43,10 +49,10 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          protocol: ftp
-          port: 21
+          protocol: ${{ env.FTP_PROTOCOL }}
+          port: ${{ env.FTP_PORT }}
           local-dir: dist/
-          server-dir: /
+          server-dir: ${{ env.FTP_SERVER_DIR }}
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
@@ -56,4 +62,5 @@ jobs:
             **/.git*/**
             **/.github/**
             **/node_modules/**
+            
 
