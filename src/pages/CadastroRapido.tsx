@@ -4,7 +4,7 @@ import { db, Container, Cliente, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
-const MATERIAIS = ['Papel/Papelão', 'Plástico', 'Metal', 'Madeira', 'Vidro', 'Misto']
+const MATERIAIS = ['AÇO', 'FERRO LATA']
 const hoje = () => new Date().toISOString().slice(0, 10)
 
 export default function CadastroRapido() {
