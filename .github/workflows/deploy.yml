@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
+      FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
+      FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/public_html/' }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
@@ -23,6 +28,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Validate app secrets
+        run: |
+          test -n "$VITE_SUPABASE_URL" || (echo "Missing GitHub secret: VITE_SUPABASE_URL" && exit 1)
+          test -n "$VITE_SUPABASE_ANON_KEY" || (echo "Missing GitHub secret: VITE_SUPABASE_ANON_KEY" && exit 1)
 
       - name: Build
         run: npm run build
@@ -54,9 +64,9 @@ jobs:
         run: |
           echo "FTP host: ${{ secrets.FTP_HOST }}"
           echo "FTP user: ${{ secrets.FTP_USER }}"
-          echo "FTP protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}"
-          echo "FTP port: ${{ secrets.FTP_PORT || '21' }}"
-          echo "FTP server dir: ${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}"
+          echo "FTP protocol: $FTP_PROTOCOL"
+          echo "FTP port: $FTP_PORT"
+          echo "FTP server dir: $FTP_SERVER_DIR"
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -64,10 +74,10 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}
-          port: ${{ secrets.FTP_PORT || '21' }}
+          protocol: ${{ env.FTP_PROTOCOL }}
+          port: ${{ env.FTP_PORT }}
           local-dir: dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}
+          server-dir: ${{ env.FTP_SERVER_DIR }}
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
