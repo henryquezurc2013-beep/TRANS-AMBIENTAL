@@ -19,7 +19,7 @@ const MENU_ITEMS = [
   { path: '/troca-container',       label: 'Troca',           icon: ArrowLeftRight,   perm: 'Troca_Container' },
   { path: '/manutencao',            label: 'Manutenção',      icon: Wrench,           perm: 'Manutencao' },
   { path: '/lancamento-manutencao', label: 'Lançar Manut.',   icon: Wrench,           perm: 'Lancamento_Manutencao' },
-  { path: '/relatorios',            label: 'Relatórios',      icon: FileText,         perm: 'Relatorios' },
+{ path: '/relatorios',            label: 'Relatórios',      icon: FileText,         perm: 'Relatorios' },
   { path: '/logs',                  label: 'Logs',            icon: ScrollText,       perm: 'Logs' },
 ]
 

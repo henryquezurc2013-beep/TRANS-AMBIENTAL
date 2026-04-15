@@ -1,5 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { Plus, Pencil, Check, X, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Check, X, Trash2, AlertTriangle, Loader2 } from 'lucide-react'
 import { db, Cliente, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
@@ -19,6 +19,12 @@ export default function Clientes() {
   const [busca, setBusca] = useState('')
   const [clienteParaExcluir, setClienteParaExcluir] = useState<Cliente | null>(null)
   const [excluindo, setExcluindo] = useState(false)
+  const [cep, setCep] = useState('')
+  const [buscandoCep, setBuscandoCep] = useState(false)
+  const [erroCep, setErroCep] = useState('')
+  const [editCep, setEditCep] = useState('')
+  const [editBuscandoCep, setEditBuscandoCep] = useState(false)
+  const [editErroCep, setEditErroCep] = useState('')
 
   useEffect(() => { carregar() }, [])
 
@@ -26,6 +32,41 @@ export default function Clientes() {
     const data = await db.clientes.getAll()
     setClientes(data)
     setLoading(false)
+  }
+
+  function fecharModal() {
+    setModalAberto(false)
+    setForm(formVazio)
+    setCep('')
+    setErroCep('')
+    setBuscandoCep(false)
+  }
+
+  function handleCepChange(valor: string) {
+    const digits = valor.replace(/\D/g, '').slice(0, 8)
+    const masked = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+    setCep(masked)
+    setErroCep('')
+    if (digits.length === 8) buscarCep(digits)
+  }
+
+  async function buscarCep(digits: string) {
+    setBuscandoCep(true)
+    setErroCep('')
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await res.json()
+      if (data.erro) { setErroCep('CEP não encontrado'); return }
+      setForm(f => ({
+        ...f,
+        endereco: data.logradouro || f.endereco,
+        bairro_cidade: [data.bairro, data.localidade, data.uf].filter(Boolean).join(' / '),
+      }))
+    } catch {
+      setErroCep('Erro ao buscar CEP. Verifique sua conexão.')
+    } finally {
+      setBuscandoCep(false)
+    }
   }
 
   async function handleNovo(e: FormEvent) {
@@ -36,13 +77,39 @@ export default function Clientes() {
       await db.clientes.add(form)
       await registrarLog(sessao!.usuarioAtual, 'CADASTRO CLIENTE', `Cliente "${form.nome_cliente}" cadastrado`)
       toast(`Cliente "${form.nome_cliente}" cadastrado!`, 'success')
-      setModalAberto(false)
-      setForm(formVazio)
+      fecharModal()
       await carregar()
     } catch (err: unknown) {
       toast(err instanceof Error ? err.message : 'Erro ao cadastrar', 'error')
     }
     setSalvando(false)
+  }
+
+  function handleEditCepChange(valor: string) {
+    const digits = valor.replace(/\D/g, '').slice(0, 8)
+    const masked = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+    setEditCep(masked)
+    setEditErroCep('')
+    if (digits.length === 8) buscarEditCep(digits)
+  }
+
+  async function buscarEditCep(digits: string) {
+    setEditBuscandoCep(true)
+    setEditErroCep('')
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await res.json()
+      if (data.erro) { setEditErroCep('CEP não encontrado'); return }
+      setEditForm(f => ({
+        ...f,
+        endereco: data.logradouro || f.endereco,
+        bairro_cidade: [data.bairro, data.localidade, data.uf].filter(Boolean).join(' / '),
+      }))
+    } catch {
+      setEditErroCep('Erro ao buscar CEP. Verifique sua conexão.')
+    } finally {
+      setEditBuscandoCep(false)
+    }
   }
 
   async function salvarEdicao(c: Cliente) {
@@ -119,13 +186,31 @@ export default function Clientes() {
                       <td style={{ fontWeight: 600 }}>{c.nome_cliente}</td>
                       <td>{inp(editForm.contato ?? '', v => setEditForm(f => ({ ...f, contato: v })), 'Contato')}</td>
                       <td>{inp(editForm.telefone ?? '', v => setEditForm(f => ({ ...f, telefone: v })), 'Telefone')}</td>
-                      <td>{inp(editForm.endereco ?? '', v => setEditForm(f => ({ ...f, endereco: v })), 'Endereço')}</td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              className="input-field"
+                              placeholder="CEP (00000-000)"
+                              value={editCep}
+                              onChange={e => handleEditCepChange(e.target.value)}
+                              maxLength={9}
+                              style={{ minWidth: '100px', paddingRight: editBuscandoCep ? '2rem' : undefined }}
+                            />
+                            {editBuscandoCep && (
+                              <Loader2 size={13} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(217,91%,60%)', animation: 'spin 1s linear infinite' }} />
+                            )}
+                          </div>
+                          {editErroCep && <span style={{ fontSize: '0.7rem', color: 'hsl(0,84%,60%)' }}>{editErroCep}</span>}
+                          <input className="input-field" style={{ minWidth: '100px' }} placeholder="Endereço" value={editForm.endereco ?? ''} onChange={e => setEditForm(f => ({ ...f, endereco: e.target.value }))} />
+                        </div>
+                      </td>
                       <td>{inp(editForm.bairro_cidade ?? '', v => setEditForm(f => ({ ...f, bairro_cidade: v })), 'Bairro/Cidade')}</td>
                       <td>{inp(editForm.observacao ?? '', v => setEditForm(f => ({ ...f, observacao: v })), 'Obs.')}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
                           <button className="btn-success" style={{ padding: '0.25rem 0.5rem' }} onClick={() => salvarEdicao(c)}><Check size={14} /></button>
-                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => setEditandoId(null)}><X size={14} /></button>
+                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => { setEditandoId(null); setEditCep(''); setEditErroCep('') }}><X size={14} /></button>
                         </div>
                       </td>
                     </>
@@ -146,6 +231,8 @@ export default function Clientes() {
                             onClick={() => {
                               setEditandoId(c.id)
                               setEditForm({ contato: c.contato, telefone: c.telefone, endereco: c.endereco, bairro_cidade: c.bairro_cidade, observacao: c.observacao })
+                              setEditCep('')
+                              setEditErroCep('')
                             }}
                           >
                             <Pencil size={13} />
@@ -171,11 +258,11 @@ export default function Clientes() {
 
       {/* Modal — Novo Cliente */}
       {modalAberto && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setModalAberto(false) }}>
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) fecharModal() }}>
           <div className="modal-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Novo Cliente</h2>
-              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setModalAberto(false)}><X size={18} /></button>
+              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal}><X size={18} /></button>
             </div>
             <form onSubmit={handleNovo} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               <div className="form-group">
@@ -192,9 +279,40 @@ export default function Clientes() {
                   <input className="input-field" placeholder="(61) 99999-0000" value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Endereço</label>
-                <input className="input-field" placeholder="Rua, número" value={form.endereco} onChange={e => setForm(f => ({ ...f, endereco: e.target.value }))} />
+              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '0.875rem' }}>
+                <div className="form-group">
+                  <label className="form-label">CEP</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      className="input-field"
+                      placeholder="00000-000"
+                      value={cep}
+                      onChange={e => handleCepChange(e.target.value)}
+                      maxLength={9}
+                      style={{ paddingRight: buscandoCep ? '2rem' : undefined }}
+                    />
+                    {buscandoCep && (
+                      <Loader2
+                        size={14}
+                        style={{
+                          position: 'absolute', right: '0.625rem', top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: 'hsl(217,91%,60%)',
+                          animation: 'spin 1s linear infinite',
+                        }}
+                      />
+                    )}
+                  </div>
+                  {erroCep && (
+                    <span style={{ fontSize: '0.75rem', color: 'hsl(0,84%,60%)', marginTop: '0.25rem', display: 'block' }}>
+                      {erroCep}
+                    </span>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Endereço</label>
+                  <input className="input-field" placeholder="Rua, número" value={form.endereco} onChange={e => setForm(f => ({ ...f, endereco: e.target.value }))} />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Bairro / Cidade</label>
@@ -205,7 +323,7 @@ export default function Clientes() {
                 <input className="input-field" placeholder="Opcional" value={form.observacao} onChange={e => setForm(f => ({ ...f, observacao: e.target.value }))} />
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
+                <button type="button" className="btn-secondary" onClick={fecharModal}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={salvando}>
                   {salvando ? 'Salvando...' : <><Plus size={14} /> Cadastrar</>}
                 </button>

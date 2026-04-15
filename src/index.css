@@ -307,6 +307,11 @@
     to { transform: translateX(0); opacity: 1; }
   }
 
+  @keyframes spin {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) rotate(360deg); }
+  }
+
   .modal-overlay {
     position: fixed;
     inset: 0;
