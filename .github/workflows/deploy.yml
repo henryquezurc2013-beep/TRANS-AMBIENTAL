@@ -45,7 +45,6 @@ jobs:
       - name: Create SPA .htaccess
         run: |
           {
-            echo 'Options -Indexes'
             echo '<IfModule mod_rewrite.c>'
             echo '  RewriteEngine On'
             echo '  RewriteBase /'
