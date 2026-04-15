@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
-      FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
-      FTP_PRIMARY_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}
       FTP_SECONDARY_DIR: /public_html/
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -65,6 +62,13 @@ jobs:
           test -n "$FTP_HOST" || (echo "Missing GitHub secret: FTP_HOST" && exit 1)
           test -n "$FTP_USER" || (echo "Missing GitHub secret: FTP_USER" && exit 1)
           test -n "$FTP_PASS" || (echo "Missing GitHub secret: FTP_PASS" && exit 1)
+
+      - name: Resolve FTP settings
+        shell: bash
+        run: |
+          echo "FTP_PROTOCOL=${{ secrets.FTP_PROTOCOL || 'ftps' }}" >> "$GITHUB_ENV"
+          echo "FTP_PORT=${{ secrets.FTP_PORT || '21' }}" >> "$GITHUB_ENV"
+          echo "FTP_PRIMARY_DIR=${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}" >> "$GITHUB_ENV"
 
       - name: Show deploy target
         run: |
