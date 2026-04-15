@@ -10,16 +10,17 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
       FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
       FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/public_html/' }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
