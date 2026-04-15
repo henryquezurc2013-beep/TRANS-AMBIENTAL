@@ -36,10 +36,8 @@ jobs:
 
       - name: Create production env file
         run: |
-          cat > .env.production << EOF
-          VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-          VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-          EOF
+          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > .env.production
+          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env.production
 
       - name: Build
         run: npm run build
@@ -47,7 +45,7 @@ jobs:
       - name: Create SPA .htaccess
         run: |
           {
-            echo 'DirectoryIndex index.html'
+            echo 'Options -Indexes'
             echo '<IfModule mod_rewrite.c>'
             echo '  RewriteEngine On'
             echo '  RewriteBase /'
