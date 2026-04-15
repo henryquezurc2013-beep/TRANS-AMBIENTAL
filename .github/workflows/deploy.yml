@@ -12,7 +12,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
       FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
-      FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}
+      FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/public_html/' }}
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
