@@ -44,6 +44,16 @@ jobs:
           </IfModule>
           EOF
 
+      - name: Validate FTP secrets
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          test -n "$FTP_HOST" || (echo "Missing GitHub secret: FTP_HOST" && exit 1)
+          test -n "$FTP_USER" || (echo "Missing GitHub secret: FTP_USER" && exit 1)
+          test -n "$FTP_PASS" || (echo "Missing GitHub secret: FTP_PASS" && exit 1)
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
