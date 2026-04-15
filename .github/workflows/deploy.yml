@@ -34,6 +34,13 @@ jobs:
           test -n "$VITE_SUPABASE_URL" || (echo "Missing GitHub secret: VITE_SUPABASE_URL" && exit 1)
           test -n "$VITE_SUPABASE_ANON_KEY" || (echo "Missing GitHub secret: VITE_SUPABASE_ANON_KEY" && exit 1)
 
+      - name: Create production env file
+        run: |
+          cat > .env.production << EOF
+          VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+          VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+          EOF
+
       - name: Build
         run: npm run build
 
