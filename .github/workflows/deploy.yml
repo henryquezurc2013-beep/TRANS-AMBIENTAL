@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' && secrets.FTP_PROTOCOL || 'ftps' }}
-      FTP_PORT: ${{ secrets.FTP_PORT != '' && secrets.FTP_PORT || '21' }}
-      FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR != '' && secrets.FTP_SERVER_DIR || '/public_html/' }}
 
     steps:
       - name: Checkout
@@ -60,10 +57,10 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          protocol: ${{ env.FTP_PROTOCOL }}
-          port: ${{ env.FTP_PORT }}
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}
+          port: ${{ secrets.FTP_PORT || '21' }}
           local-dir: dist/
-          server-dir: ${{ env.FTP_SERVER_DIR }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/' }}
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
