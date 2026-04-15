@@ -71,7 +71,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: dist/
-          server-dir: public_html/
+          server-dir: /
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
