@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Pencil, Check, X } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Pencil, Check, X, Printer } from 'lucide-react'
 import { db, Controle, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
+import RelatorioAtrasados from '../components/RelatorioAtrasados'
 
 const hoje = () => new Date().toISOString().slice(0, 10)
 
@@ -20,6 +21,7 @@ export default function Atrasados() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [novaData, setNovaData] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [relatorioAberto, setRelatorioAberto] = useState(false)
 
   useEffect(() => { carregar() }, [])
 
@@ -70,12 +72,23 @@ export default function Atrasados() {
 
   return (
     <div className="page-container">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Atrasados</h1>
-          {atrasados.length > 0 && <span className="badge badge-destructive">{atrasados.length}</span>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+            <h1 className="page-title" style={{ margin: 0 }}>Atrasados</h1>
+            {atrasados.length > 0 && <span className="badge badge-destructive">{atrasados.length}</span>}
+          </div>
+          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Containers com retirada em atraso</p>
         </div>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Containers com retirada em atraso</p>
+        {atrasados.length > 0 && (
+          <button
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+            onClick={() => setRelatorioAberto(true)}
+          >
+            <Printer size={15} /> Relatório de Atrasados
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -184,6 +197,10 @@ export default function Atrasados() {
             )
           })}
         </div>
+      )}
+
+      {relatorioAberto && (
+        <RelatorioAtrasados atrasados={atrasados} onClose={() => setRelatorioAberto(false)} />
       )}
     </div>
   )
