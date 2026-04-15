@@ -39,16 +39,16 @@ jobs:
 
       - name: Create SPA .htaccess
         run: |
-          cat > dist/.htaccess << 'EOF'
-          <IfModule mod_rewrite.c>
-            RewriteEngine On
-            RewriteBase /
-            RewriteRule ^index\.html$ - [L]
-            RewriteCond %{REQUEST_FILENAME} !-f
-            RewriteCond %{REQUEST_FILENAME} !-d
-            RewriteRule . /index.html [L]
-          </IfModule>
-          EOF
+          {
+            echo '<IfModule mod_rewrite.c>'
+            echo '  RewriteEngine On'
+            echo '  RewriteBase /'
+            echo '  RewriteRule ^index\.html$ - [L]'
+            echo '  RewriteCond %{REQUEST_FILENAME} !-f'
+            echo '  RewriteCond %{REQUEST_FILENAME} !-d'
+            echo '  RewriteRule . /index.html [L]'
+            echo '</IfModule>'
+          } > dist/.htaccess
 
       - name: Validate FTP secrets
         env:
