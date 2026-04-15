@@ -52,7 +52,7 @@ function Sidebar({ itensVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLog
           src="/logo.svg"
           alt="Trans Ambiental"
           style={{
-            width: '140px',
+            width: '120px',
             height: 'auto',
             objectFit: 'contain',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
@@ -176,7 +176,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Menu size={20} />
           </button>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '90px', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))' }} />
+            <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '80px', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))' }} />
           </div>
           <div style={{ width: '2rem' }} />
         </div>
