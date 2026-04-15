@@ -51,6 +51,14 @@ jobs:
           test -n "$FTP_USER" || (echo "Missing GitHub secret: FTP_USER" && exit 1)
           test -n "$FTP_PASS" || (echo "Missing GitHub secret: FTP_PASS" && exit 1)
 
+      - name: Show deploy target
+        run: |
+          echo "FTP host: ${{ secrets.FTP_HOST }}"
+          echo "FTP user: ${{ secrets.FTP_USER }}"
+          echo "FTP protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}"
+          echo "FTP port: ${{ secrets.FTP_PORT || '21' }}"
+          echo "FTP server dir: ${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}"
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
