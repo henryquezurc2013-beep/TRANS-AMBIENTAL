@@ -71,7 +71,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: dist/
-          server-dir: domains/transambientalcontainer.com.br/public_html/
+          server-dir: public_html/
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
