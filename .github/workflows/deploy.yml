@@ -60,7 +60,7 @@ jobs:
           protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}
           port: ${{ secrets.FTP_PORT || '21' }}
           local-dir: dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/' }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
