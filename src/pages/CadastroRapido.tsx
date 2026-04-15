@@ -194,6 +194,19 @@ export default function CadastroRapido() {
               <div className="form-group">
                 <label className="form-label">Previsão de Retirada *</label>
                 <input className="input-field" type="date" value={previsaoRetirada} onChange={e => setPrevisaoRetirada(e.target.value)} required />
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ marginTop: '0.375rem', padding: '0.25rem 0.625rem', fontSize: '0.75rem', width: '100%' }}
+                  onClick={() => {
+                    const base = dataEntrega || hoje()
+                    const d = new Date(base + 'T00:00:00')
+                    d.setDate(d.getDate() + 30)
+                    setPrevisaoRetirada(d.toISOString().slice(0, 10))
+                  }}
+                >
+                  +30 dias
+                </button>
               </div>
             </div>
 
