@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ClipboardList } from 'lucide-react'
 import { db, Controle as IControle } from '../services/dataService'
+import OrdemColeta from '../components/OrdemColeta'
 
 function fmtData(d: string | null) {
   if (!d) return <span className="badge badge-warning">Em aberto</span>
@@ -11,6 +12,7 @@ export default function ControlePage() {
   const [registros, setRegistros] = useState<IControle[]>([])
   const [loading, setLoading] = useState(true)
   const [busca, setBusca] = useState('')
+  const [ordemAberta, setOrdemAberta] = useState(false)
 
   useEffect(() => {
     db.controle.getAll().then(data => { setRegistros(data); setLoading(false) })
@@ -29,13 +31,22 @@ export default function ControlePage() {
           <h1 className="page-title">Controle</h1>
           <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Histórico de movimentações</p>
         </div>
-        <input
-          className="input-field"
-          style={{ maxWidth: '280px' }}
-          placeholder="Buscar por container, cliente..."
-          value={busca}
-          onChange={e => setBusca(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            className="input-field"
+            style={{ maxWidth: '280px' }}
+            placeholder="Buscar por container, cliente..."
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+          />
+          <button
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', whiteSpace: 'nowrap' }}
+            onClick={() => setOrdemAberta(true)}
+          >
+            <ClipboardList size={15} /> Gerar Ordem de Coleta
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -82,6 +93,8 @@ export default function ControlePage() {
       <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'hsl(210,20%,40%)' }}>
         {filtrado.length} registro(s) exibido(s)
       </div>
+
+      {ordemAberta && <OrdemColeta onClose={() => setOrdemAberta(false)} />}
     </div>
   )
 }
