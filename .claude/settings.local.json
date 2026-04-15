@@ -5,7 +5,8 @@
       "Bash(npx tailwindcss *)",
       "Bash(npx --yes tailwindcss init -p)",
       "Bash(npm run *)",
-      "Bash(gh workflow *)"
+      "Bash(gh workflow *)",
+      "Bash(gh run *)"
     ]
   }
 }
