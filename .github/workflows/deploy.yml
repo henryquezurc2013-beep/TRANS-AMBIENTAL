@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      FTP_SECONDARY_DIR: /public_html/
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
@@ -63,53 +62,16 @@ jobs:
           test -n "$FTP_USER" || (echo "Missing GitHub secret: FTP_USER" && exit 1)
           test -n "$FTP_PASS" || (echo "Missing GitHub secret: FTP_PASS" && exit 1)
 
-      - name: Resolve FTP settings
-        shell: bash
-        run: |
-          echo "FTP_PROTOCOL=${{ secrets.FTP_PROTOCOL || 'ftps' }}" >> "$GITHUB_ENV"
-          echo "FTP_PORT=${{ secrets.FTP_PORT || '21' }}" >> "$GITHUB_ENV"
-          echo "FTP_PRIMARY_DIR=${{ secrets.FTP_SERVER_DIR || '/domains/transambientalcontainer.com.br/public_html/' }}" >> "$GITHUB_ENV"
-
-      - name: Show deploy target
-        run: |
-          echo "FTP host: ${{ secrets.FTP_HOST }}"
-          echo "FTP user: ${{ secrets.FTP_USER }}"
-          echo "FTP protocol: $FTP_PROTOCOL"
-          echo "FTP port: $FTP_PORT"
-          echo "FTP primary dir: $FTP_PRIMARY_DIR"
-          echo "FTP secondary dir: $FTP_SECONDARY_DIR"
-
-      - name: Deploy to primary directory
+      - name: Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          protocol: ${{ env.FTP_PROTOCOL }}
-          port: ${{ env.FTP_PORT }}
+          protocol: ftps
+          port: 21
           local-dir: dist/
-          server-dir: ${{ env.FTP_PRIMARY_DIR }}
-          timeout: 120000
-          dangerous-clean-slate: false
-          dry-run: false
-          log-level: verbose
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/node_modules/**
-
-      - name: Deploy to secondary directory
-        if: ${{ env.FTP_PRIMARY_DIR != env.FTP_SECONDARY_DIR }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          protocol: ${{ env.FTP_PROTOCOL }}
-          port: ${{ env.FTP_PORT }}
-          local-dir: dist/
-          server-dir: ${{ env.FTP_SECONDARY_DIR }}
+          server-dir: public_html/
           timeout: 120000
           dangerous-clean-slate: false
           dry-run: false
