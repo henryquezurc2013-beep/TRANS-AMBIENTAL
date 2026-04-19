@@ -1,54 +1,90 @@
-import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, PlusCircle, ClipboardList, Warehouse,
   AlertTriangle, Package, Users, ArrowLeftRight, Wrench,
-  FileText, ScrollText, LogOut, Menu
+  FileText, ScrollText, LogOut, Menu, Search, Bell,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from './Toast'
 
-const MENU_ITEMS = [
-  { path: '/dashboard',             label: 'Dashboard',       icon: LayoutDashboard,  perm: 'Dashboard' },
-  { path: '/cadastro-rapido',       label: 'Cadastro Rápido', icon: PlusCircle,       perm: 'Cadastro_Rapido' },
-  { path: '/controle',              label: 'Controle',        icon: ClipboardList,    perm: 'Controle' },
-  { path: '/estoque',               label: 'Estoque',         icon: Warehouse,        perm: 'Estoque' },
-  { path: '/atrasados',             label: 'Atrasados',       icon: AlertTriangle,    perm: 'Atrasados' },
-  { path: '/containers',            label: 'Containers',      icon: Package,          perm: 'Cadastro_Containers' },
-  { path: '/clientes',              label: 'Clientes',        icon: Users,            perm: 'Clientes' },
-  { path: '/troca-container',       label: 'Troca',           icon: ArrowLeftRight,   perm: 'Troca_Container' },
-  { path: '/manutencao',            label: 'Manutenção',      icon: Wrench,           perm: 'Manutencao' },
-  { path: '/lancamento-manutencao', label: 'Lançar Manut.',   icon: Wrench,           perm: 'Lancamento_Manutencao' },
-  { path: '/relatorios',            label: 'Relatórios',      icon: FileText,         perm: 'Relatorios' },
-  { path: '/logs',                  label: 'Logs',            icon: ScrollText,       perm: 'Logs' },
+const GRUPOS = [
+  {
+    label: 'Principal',
+    itens: [
+      { path: '/dashboard',       label: 'Dashboard',       icon: LayoutDashboard, perm: 'Dashboard'            },
+      { path: '/cadastro-rapido', label: 'Cadastro Rápido', icon: PlusCircle,      perm: 'Cadastro_Rapido'      },
+      { path: '/controle',        label: 'Controle',        icon: ClipboardList,   perm: 'Controle'             },
+    ],
+  },
+  {
+    label: 'Operação',
+    itens: [
+      { path: '/estoque',               label: 'Estoque',       icon: Warehouse,      perm: 'Estoque'                  },
+      { path: '/atrasados',             label: 'Atrasados',     icon: AlertTriangle,  perm: 'Atrasados'                },
+      { path: '/containers',            label: 'Containers',    icon: Package,        perm: 'Cadastro_Containers'      },
+      { path: '/troca-container',       label: 'Troca',         icon: ArrowLeftRight, perm: 'Troca_Container'          },
+      { path: '/manutencao',            label: 'Manutenção',    icon: Wrench,         perm: 'Manutencao'               },
+      { path: '/lancamento-manutencao', label: 'Lançar Manut.', icon: Wrench,         perm: 'Lancamento_Manutencao'    },
+    ],
+  },
+  {
+    label: 'Gestão',
+    itens: [
+      { path: '/clientes',   label: 'Clientes',   icon: Users,      perm: 'Clientes'   },
+      { path: '/relatorios', label: 'Relatórios', icon: FileText,   perm: 'Relatorios' },
+      { path: '/logs',       label: 'Logs',       icon: ScrollText, perm: 'Logs'       },
+    ],
+  },
 ]
 
-const sidebarStyle: React.CSSProperties = {
-  width: '16rem',
-  height: '100vh',
-  background: 'var(--sidebar)',
-  borderRight: '1px solid var(--border-subtle)',
-  display: 'flex',
-  flexDirection: 'column',
-  top: 0,
-  left: 0,
-  zIndex: 100,
+const PATH_LABELS: Record<string, string> = {
+  '/dashboard':             'Dashboard',
+  '/cadastro-rapido':       'Cadastro Rápido',
+  '/controle':              'Controle',
+  '/estoque':               'Estoque',
+  '/atrasados':             'Atrasados',
+  '/containers':            'Containers',
+  '/clientes':              'Clientes',
+  '/troca-container':       'Troca',
+  '/manutencao':            'Manutenção',
+  '/lancamento-manutencao': 'Lançar Manut.',
+  '/relatorios':            'Relatórios',
+  '/logs':                  'Logs',
+}
+
+function HorarioAtual() {
+  const fmt = () => {
+    const d = new Date()
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }
+  const [hora, setHora] = useState(fmt)
+  useEffect(() => {
+    const id = setInterval(() => setHora(fmt()), 30000)
+    return () => clearInterval(id)
+  }, [])
+  return <>{hora}</>
 }
 
 interface SidebarProps {
-  itensVisiveis: typeof MENU_ITEMS
+  gruposVisiveis: typeof GRUPOS
   usuarioAtual: string | undefined
-  nivelAtual: string | undefined
+  nivelAtual:   string | undefined
   onCloseMobile: () => void
   onLogout: () => void
 }
 
-function Sidebar({ itensVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLogout }: SidebarProps) {
+function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLogout }: SidebarProps) {
   return (
-    <div style={sidebarStyle}>
+    <div style={{
+      width: '16rem', height: '100vh',
+      background: 'var(--sidebar)',
+      borderRight: '1px solid var(--border-subtle)',
+      display: 'flex', flexDirection: 'column',
+    }}>
       {/* Logo */}
       <div style={{
-        padding: '1rem 0',
+        padding: '1.125rem 0 0.875rem',
         borderBottom: '1px solid var(--border-subtle)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
@@ -59,44 +95,55 @@ function Sidebar({ itensVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLog
           style={{
             width: '120px', height: 'auto', objectFit: 'contain',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-            transition: 'transform 0.6s ease', cursor: 'pointer',
+            transition: 'transform 0.4s ease', cursor: 'pointer',
           }}
           onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(5deg) scale(1.05)')}
           onMouseLeave={e => (e.currentTarget.style.transform = 'rotate(0deg) scale(1)')}
         />
-        <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', letterSpacing: '0.05em', marginTop: '0.375rem' }}>
+        <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', letterSpacing: '0.06em', marginTop: '0.35rem', textTransform: 'uppercase' }}>
           Controle de Containers
         </div>
       </div>
 
-      {/* Menu */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 0.5rem' }}>
-        {itensVisiveis.map(item => {
-          const Icon = item.icon
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onCloseMobile}
-              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-            >
-              <Icon size={16} />
-              {item.label}
-            </NavLink>
-          )
-        })}
+      {/* Nav por seções */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.5rem 0' }}>
+        {gruposVisiveis.map(grupo => grupo.itens.length === 0 ? null : (
+          <div key={grupo.label} style={{ marginBottom: '0.25rem' }}>
+            <div style={{
+              fontSize: '0.6rem', fontWeight: 700, color: 'var(--fg-muted)',
+              textTransform: 'uppercase', letterSpacing: '0.1em',
+              padding: '0.625rem 0.75rem 0.25rem',
+            }}>
+              {grupo.label}
+            </div>
+            {grupo.itens.map(item => {
+              const Icon = item.icon
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={onCloseMobile}
+                  className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                >
+                  <Icon size={15} />
+                  {item.label}
+                </NavLink>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Rodapé */}
-      <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(210, 20%, 85%)' }}>{usuarioAtual}</div>
+      <div style={{ padding: '0.875rem 1rem', borderTop: '1px solid var(--border-subtle)' }}>
+        <div style={{ marginBottom: '0.625rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(210,20%,85%)' }}>{usuarioAtual}</div>
           <div style={{ marginTop: '0.25rem' }}>
             <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{nivelAtual}</span>
           </div>
         </div>
-        <button onClick={onLogout} className="btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
-          <LogOut size={14} />
+        <button onClick={onLogout} className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '0.8125rem' }}>
+          <LogOut size={13} />
           Sair
         </button>
       </div>
@@ -108,6 +155,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { sessao, logout, temAcesso } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   async function handleLogout() {
@@ -116,15 +164,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     navigate('/login')
   }
 
-  const itensVisiveis = MENU_ITEMS.filter(item => temAcesso(item.perm))
+  const gruposVisiveis = GRUPOS.map(g => ({
+    ...g,
+    itens: g.itens.filter(item => temAcesso(item.perm)),
+  }))
+
+  const paginaAtual = PATH_LABELS[location.pathname] ?? 'Página'
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
-      {/* Sidebar — desktop (fixa, visível via CSS) */}
+      {/* Sidebar desktop */}
       <div id="sidebar-desktop" style={{ display: 'none', position: 'fixed', top: 0, left: 0, zIndex: 100 }}>
         <Sidebar
-          itensVisiveis={itensVisiveis}
+          gruposVisiveis={gruposVisiveis}
           usuarioAtual={sessao?.usuarioAtual}
           nivelAtual={sessao?.nivelAtual}
           onCloseMobile={() => {}}
@@ -132,7 +185,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         />
       </div>
 
-      {/* Sidebar mobile — overlay */}
+      {/* Sidebar mobile overlay */}
       {sidebarOpen && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99, backdropFilter: 'blur(4px)' }}
@@ -145,7 +198,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         transition: 'transform 0.2s ease',
       }} id="sidebar-mobile">
         <Sidebar
-          itensVisiveis={itensVisiveis}
+          gruposVisiveis={gruposVisiveis}
           usuarioAtual={sessao?.usuarioAtual}
           nivelAtual={sessao?.nivelAtual}
           onCloseMobile={() => setSidebarOpen(false)}
@@ -158,23 +211,61 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Header mobile */}
         <div id="mobile-header" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0.75rem 1rem',
           background: 'var(--sidebar)',
           borderBottom: '1px solid var(--border-subtle)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
+          position: 'sticky', top: 0, zIndex: 50,
         }}>
           <button onClick={() => setSidebarOpen(true)} className="btn-ghost" style={{ padding: '0.375rem' }}>
             <Menu size={20} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '80px', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))' }} />
-          </div>
+          <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
           <div style={{ width: '2rem' }} />
+        </div>
+
+        {/* Header desktop */}
+        <div id="desktop-header" style={{ display: 'none' }}>
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 50,
+            background: 'hsl(222,44%,8% / 0.95)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid var(--border-subtle)',
+            padding: '0 1.5rem',
+            height: '52px',
+            display: 'flex', alignItems: 'center', gap: '1rem',
+          }}>
+            {/* Breadcrumb */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', color: 'var(--fg-muted)', flexShrink: 0 }}>
+              <span>Trans Ambiental</span>
+              <span style={{ opacity: 0.4 }}>/</span>
+              <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{paginaAtual}</span>
+            </div>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Sistema online */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--fg-muted)', flexShrink: 0 }}>
+              <span style={{ color: 'var(--success)', fontSize: '0.6rem' }}>●</span>
+              <span>Sistema online · Sincronizado <HorarioAtual /></span>
+            </div>
+
+            {/* Busca */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <Search size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
+              <input
+                className="input-field"
+                style={{ paddingLeft: '2rem', width: '200px', height: '32px', fontSize: '0.8125rem' }}
+                placeholder="Buscar container, cliente..."
+              />
+            </div>
+
+            {/* Notificação */}
+            <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
+              <Bell size={16} />
+            </button>
+          </div>
         </div>
 
         <main>{children}</main>
@@ -182,10 +273,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <style>{`
         @media (min-width: 768px) {
-          #sidebar-desktop { display: block !important; }
-          #sidebar-mobile  { display: none !important; }
-          #main-content    { margin-left: 16rem !important; }
-          #mobile-header   { display: none !important; }
+          #sidebar-desktop  { display: block !important; }
+          #sidebar-mobile   { display: none !important; }
+          #main-content     { margin-left: 16rem !important; }
+          #mobile-header    { display: none !important; }
+          #desktop-header   { display: block !important; }
         }
       `}</style>
     </div>
