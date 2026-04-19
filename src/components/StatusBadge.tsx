@@ -1,50 +1,20 @@
-import { CheckCircle, Truck, Wrench, Clock, AlertTriangle } from 'lucide-react'
+interface Props { status: string }
 
-interface Props {
-  status: string
-}
-
-const MAP: Record<string, {
-  label:     string
-  className: string
-  Icone:     typeof CheckCircle
-  pulse?:    boolean
-}> = {
-  DISPONIVEL: { label: 'Disponível', className: 'badge-success',     Icone: CheckCircle             },
-  'EM USO':   { label: 'Em Uso',     className: 'badge-info',        Icone: Truck,     pulse: true  },
-  MANUTENCAO: { label: 'Manutenção', className: 'badge-warning',     Icone: Wrench                  },
-  PENDENTE:   { label: 'Pendente',   className: 'badge-pending',     Icone: Clock                   },
-  ATRASADO:   { label: 'Atrasado',   className: 'badge-destructive', Icone: AlertTriangle           },
+const MAP: Record<string, { label: string; cls: string }> = {
+  DISPONIVEL:  { label: 'Disponível', cls: 'badge-success'     },
+  'EM USO':    { label: 'Em uso',     cls: 'badge-info'        },
+  MANUTENCAO:  { label: 'Manutenção', cls: 'badge-warning'     },
+  PENDENTE:    { label: 'Pendente',   cls: 'badge-warning'     },
+  ATRASADO:    { label: 'Atrasado',   cls: 'badge-destructive' },
 }
 
 export default function StatusBadge({ status }: Props) {
   const cfg = MAP[status]
-
-  if (!cfg) {
-    return <span className="badge badge-muted">{status}</span>
-  }
-
-  const { label, className, Icone, pulse } = cfg
-
+  if (!cfg) return <span className="badge badge-muted"><span className="dot" />{status}</span>
   return (
-    <span className={`badge ${className}`}>
-      <Icone size={12} />
-      {label}
-      {pulse && (
-        <>
-          <span style={{
-            width: '6px', height: '6px', borderRadius: '50%',
-            backgroundColor: 'currentColor', flexShrink: 0,
-            animation: 'statusPulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite',
-          }} />
-          <style>{`
-            @keyframes statusPulse {
-              0%, 100% { opacity: 1; }
-              50%       { opacity: 0.3; }
-            }
-          `}</style>
-        </>
-      )}
+    <span className={`badge ${cfg.cls}`}>
+      <span className="dot" />
+      {cfg.label}
     </span>
   )
 }
