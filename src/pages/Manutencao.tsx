@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Pencil, X, ArrowRight, Clock } from 'lucide-react'
 import { db, Manutencao as IManutencao, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -195,7 +195,7 @@ export default function Manutencao() {
                       <button className="btn-ghost" style={{ padding: '0.25rem 0.5rem' }}
                         title={`Avançar para: ${STATUS_LABEL[FLUXO[r.status_manutencao]]}`}
                         onClick={() => abrirEdicao(r)}>
-                        <Pencil size={13} />
+                        <Icon name="pencil" size={13} />
                       </button>
                     )}
                   </td>
@@ -213,7 +213,7 @@ export default function Manutencao() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Atualizar Manutenção</h2>
-              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal} disabled={salvando}><X size={18} /></button>
+              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal} disabled={salvando}><Icon name="x" size={18} /></button>
             </div>
 
             {/* Info do container */}
@@ -255,7 +255,7 @@ export default function Manutencao() {
                   {STATUS_LABEL[editando.status_manutencao]}
                 </span>
               </div>
-              <ArrowRight size={18} style={{ color: 'var(--fg-muted)', flexShrink: 0 }} />
+              <Icon name="arrow_right" size={18} style={{ color: 'var(--fg-muted)', flexShrink: 0 }} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Próximo status</div>
                 <span style={{
@@ -305,11 +305,11 @@ export default function Manutencao() {
                       borderBottom: i < obsData.historia.length - 1 ? `1px solid ${innerBorder}` : 'none',
                       fontSize: '0.8rem',
                     }}>
-                      <Clock size={12} style={{ color: 'var(--fg-muted)', flexShrink: 0, marginTop: '0.15rem' }} />
+                      <Icon name="clock" size={12} style={{ color: 'var(--fg-muted)', flexShrink: 0, marginTop: '0.15rem' }} />
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: h.nota ? '0.15rem' : 0 }}>
                           <span style={{ color: corStatus(h.de), fontWeight: 600 }}>{STATUS_LABEL[h.de] ?? h.de}</span>
-                          <ArrowRight size={11} style={{ color: 'var(--fg-muted)' }} />
+                          <Icon name="arrow_right" size={11} style={{ color: 'var(--fg-muted)' }} />
                           <span style={{ color: corStatus(h.para), fontWeight: 600 }}>{STATUS_LABEL[h.para] ?? h.para}</span>
                           <span style={{ marginLeft: 'auto', color: 'var(--fg-muted)', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
                             {new Date(h.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

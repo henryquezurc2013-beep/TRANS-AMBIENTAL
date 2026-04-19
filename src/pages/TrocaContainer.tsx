@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { ArrowLeftRight } from 'lucide-react'
 import { db, Container, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -113,7 +113,7 @@ export default function TrocaContainer() {
 
       <div className="card" style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <ArrowLeftRight size={18} color="var(--primary)" />
+          <Icon name="swap" size={18} color="var(--primary)" />
           <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Dados da Troca</h2>
         </div>
 
@@ -127,7 +127,7 @@ export default function TrocaContainer() {
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '0.125rem' }}>
-              <ArrowLeftRight size={20} color="var(--fg-muted)" />
+              <Icon name="swap" size={20} color="var(--fg-muted)" />
             </div>
             <div className="form-group">
               <label className="form-label">Container Novo (disponível) *</label>
@@ -160,7 +160,7 @@ export default function TrocaContainer() {
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}>
-            {loading ? 'Processando...' : <><ArrowLeftRight size={15} /> Realizar Troca</>}
+            {loading ? 'Processando...' : <><Icon name="swap" size={15} /> Realizar Troca</>}
           </button>
         </form>
       </div>

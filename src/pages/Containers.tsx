@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { Plus, Pencil, Check, X } from 'lucide-react'
 import { db, Container, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -126,7 +126,7 @@ export default function Containers() {
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <input className="input-field" style={{ maxWidth: '220px' }} placeholder="Buscar..." value={busca} onChange={e => setBusca(e.target.value)} />
           <button className="btn-primary" onClick={() => setModalAberto(true)}>
-            <Plus size={15} /> Novo Container
+            <Icon name="plus" size={15} /> Novo Container
           </button>
         </div>
       </div>
@@ -170,8 +170,8 @@ export default function Containers() {
                       <td><input className="input-field" style={{ width: '120px' }} value={editForm.material_preferencial ?? ''} onChange={e => setEditForm(f => ({ ...f, material_preferencial: e.target.value }))} /></td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button className="btn-success" style={{ padding: '0.25rem 0.5rem' }} onClick={() => salvarEdicao(c)}><Check size={14} /></button>
-                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => setEditandoId(null)}><X size={14} /></button>
+                          <button className="btn-success" style={{ padding: '0.25rem 0.5rem' }} onClick={() => salvarEdicao(c)}><Icon name="check" size={14} /></button>
+                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => setEditandoId(null)}><Icon name="x" size={14} /></button>
                         </div>
                       </td>
                     </>
@@ -186,7 +186,7 @@ export default function Containers() {
                       <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.material_preferencial || '—'}</td>
                       <td>
                         <button className="btn-ghost" style={{ padding: '0.25rem 0.5rem' }} onClick={() => iniciarEdicao(c)}>
-                          <Pencil size={13} />
+                          <Icon name="pencil" size={13} />
                         </button>
                       </td>
                     </>
@@ -204,7 +204,7 @@ export default function Containers() {
           <div className="modal-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Novo Container</h2>
-              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setModalAberto(false)}><X size={18} /></button>
+              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setModalAberto(false)}><Icon name="x" size={18} /></button>
             </div>
             <form onSubmit={handleNovo} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
@@ -246,7 +246,7 @@ export default function Containers() {
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
                 <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={salvando}>
-                  {salvando ? 'Salvando...' : <><Plus size={14} /> Cadastrar</>}
+                  {salvando ? 'Salvando...' : <><Icon name="plus" size={14} /> Cadastrar</>}
                 </button>
               </div>
             </form>

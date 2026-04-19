@@ -1,8 +1,8 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
+import Icon from '../components/Icon'
 
 export default function Login() {
   const { login }    = useAuth()
@@ -87,7 +87,7 @@ export default function Login() {
                   onClick={() => setMostrarSenha(v => !v)}
                   style={{ position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 0, display: 'flex' }}
                 >
-                  {mostrarSenha ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {mostrarSenha ? <Icon name="eyeoff" size={15} /> : <Icon name="eye" size={15} />}
                 </button>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%', justifyContent: 'center', padding: '0.625rem', marginTop: '0.25rem', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? 'Entrando...' : <><LogIn size={15} /> Entrar</>}
+              {loading ? 'Entrando...' : <><Icon name="login" size={15} /> Entrar</>}
             </button>
           </form>
         </div>

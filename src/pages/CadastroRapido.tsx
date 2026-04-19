@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { PlusCircle, CheckCircle, Package, Truck } from 'lucide-react'
 import { db, Container, Cliente, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -131,17 +131,17 @@ export default function CadastroRapido() {
       {/* Abas */}
       <div className="tab-list" style={{ marginBottom: '1.5rem' }}>
         <button className={`tab-trigger${aba === 'entrega' ? ' active' : ''}`} onClick={() => setAba('entrega')}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><Truck size={14} /> Lançar Entrega</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><Icon name="truck" size={14} /> Lançar Entrega</span>
         </button>
         <button className={`tab-trigger${aba === 'retirada' ? ' active' : ''}`} onClick={() => setAba('retirada')}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><CheckCircle size={14} /> Retirar Container</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}><Icon name="check_circle" size={14} /> Retirar Container</span>
         </button>
       </div>
 
       {aba === 'entrega' ? (
         <div className="card" style={{ maxWidth: '600px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <PlusCircle size={18} color="var(--primary)" />
+            <Icon name="plus_circle" size={18} color="var(--primary)" />
             <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Nova Entrega</h2>
             <span className="badge badge-info" style={{ marginLeft: 'auto' }}>{disponiveis.length} disponíveis</span>
           </div>
@@ -206,14 +206,14 @@ export default function CadastroRapido() {
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}>
-              {loading ? 'Salvando...' : <><PlusCircle size={15} /> Lançar Entrega</>}
+              {loading ? 'Salvando...' : <><Icon name="plus_circle" size={15} /> Lançar Entrega</>}
             </button>
           </form>
         </div>
       ) : (
         <div className="card" style={{ maxWidth: '480px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <Package size={18} color="var(--success)" />
+            <Icon name="package" size={18} color="var(--success)" />
             <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Retirar Container</h2>
             <span className="badge badge-warning" style={{ marginLeft: 'auto' }}>{emUso.length} em uso</span>
           </div>
@@ -236,7 +236,7 @@ export default function CadastroRapido() {
 
             <button type="submit" className="btn-success" disabled={loading}
               style={{ alignSelf: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 600, marginTop: '0.25rem' }}>
-              {loading ? 'Salvando...' : <><CheckCircle size={15} /> Confirmar Retirada</>}
+              {loading ? 'Salvando...' : <><Icon name="check_circle" size={15} /> Confirmar Retirada</>}
             </button>
           </form>
         </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Pencil, Check, X, Printer } from 'lucide-react'
 import { db, Controle, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 import RelatorioAtrasados from '../components/RelatorioAtrasados'
@@ -88,7 +88,7 @@ export default function Atrasados() {
         </div>
         {atrasados.length > 0 && (
           <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }} onClick={() => setRelatorioAberto(true)}>
-            <Printer size={15} /> Relatório de Atrasados
+            <Icon name="printer" size={15} /> Relatório de Atrasados
           </button>
         )}
       </div>
@@ -97,7 +97,7 @@ export default function Atrasados() {
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : atrasados.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <AlertTriangle size={40} color="var(--success)" style={{ margin: '0 auto 1rem' }} />
+          <Icon name="alert" size={40} color="var(--success)" style={{ margin: '0 auto 1rem', display: 'block' }} />
           <h3 style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>Tudo em dia!</h3>
           <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Nenhum container com retirada atrasada.</p>
         </div>
@@ -142,17 +142,17 @@ export default function Atrasados() {
                           autoFocus
                         />
                         <button className="btn-success" style={{ padding: '0.2rem 0.45rem' }} disabled={salvando} onClick={() => salvarData(c)} title="Confirmar">
-                          <Check size={13} />
+                          <Icon name="check" size={13} />
                         </button>
                         <button className="btn-ghost" style={{ padding: '0.2rem 0.45rem' }} disabled={salvando} onClick={cancelarEdicao} title="Cancelar">
-                          <X size={13} />
+                          <Icon name="x" size={13} />
                         </button>
                       </span>
                     ) : (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                         <span>Prev. {c.previsao_retirada.split('-').reverse().join('/')}</span>
                         <button className="btn-ghost" style={{ padding: '0.125rem 0.3rem', lineHeight: 1 }} onClick={() => iniciarEdicao(c.id, c.previsao_retirada)} title="Editar previsão de retirada">
-                          <Pencil size={11} />
+                          <Icon name="pencil" size={11} />
                         </button>
                       </span>
                     )}
@@ -169,7 +169,7 @@ export default function Atrasados() {
                       <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)' }}>dias</div>
                     </div>
                     <button className="btn-primary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }} onClick={() => navigate('/cadastro-rapido')}>
-                      Resolver <ArrowRight size={13} />
+                      Resolver <Icon name="arrow_right" size={13} />
                     </button>
                   </div>
                 )}

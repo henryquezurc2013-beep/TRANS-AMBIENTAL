@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import AppLayout from './AppLayout'
-import { ShieldOff } from 'lucide-react'
+import Icon from './Icon'
 
 interface Props {
   pagina: string
@@ -27,7 +27,7 @@ export default function ProtectedRoute({ pagina, children }: Props) {
           gap: '1rem',
           color: 'var(--fg-muted)',
         }}>
-          <ShieldOff size={48} />
+          <Icon name="shield_off" size={48} />
           <h2 style={{ margin: 0, color: 'var(--fg)', fontWeight: 600 }}>Acesso Negado</h2>
           <p style={{ margin: 0, fontSize: '0.875rem' }}>Você não tem permissão para acessar esta página.</p>
         </div>

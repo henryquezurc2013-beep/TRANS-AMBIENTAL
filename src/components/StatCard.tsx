@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import Icon from './Icon'
 
 export interface BreakdownItem {
   label: string
@@ -10,17 +10,17 @@ export interface StatCardProps {
   label:     string
   value:     number
   unit?:     string
-  icon:      LucideIcon
+  icon:      string
   accent:    string
   delta:     { dir: 'up' | 'down' | 'flat'; text: string }
-  trend?:    number[]        // 9 valores 0-1
+  trend?:    number[]
   breakdown?: BreakdownItem[]
   onClick?:  () => void
   active?:   boolean
 }
 
 export default function StatCard({
-  label, value, unit, icon: Icon, accent,
+  label, value, unit, icon, accent,
   delta, trend = [], breakdown = [],
   onClick, active = false,
 }: StatCardProps) {
@@ -41,7 +41,6 @@ export default function StatCard({
         overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
         paddingBottom: '2.5rem',
-        transition: 'border-color 0.18s, box-shadow 0.18s',
         ['--accent-bar' as string]: accent,
       } as React.CSSProperties}
       onClick={onClick}
@@ -63,6 +62,7 @@ export default function StatCard({
           transition: 'all 0.18s',
         }}>
           <Icon
+            name={icon}
             size={13}
             color={hovered ? accent : 'hsl(210,20%,45%)'}
             style={{ transition: 'color 0.18s', display: 'block' }}
@@ -100,11 +100,12 @@ export default function StatCard({
       {trend.length === 9 && (
         <div className="sparkline" style={{ position: 'absolute', bottom: '0.375rem', right: '0.375rem' }}>
           {trend.map((v, i) => (
-            <div
+            <span
               key={i}
               onMouseEnter={e => { e.stopPropagation(); setHoveredBar(i) }}
               onMouseLeave={e => { e.stopPropagation(); setHoveredBar(null) }}
               style={{
+                display: 'block',
                 width: '6px',
                 height: `${Math.max(12, Math.round(v * 100))}%`,
                 background: accent,

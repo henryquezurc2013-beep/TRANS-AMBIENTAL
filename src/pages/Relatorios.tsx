@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Warehouse, Truck, Wrench } from 'lucide-react'
 import { db, Container, Controle, Manutencao, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 
 const CORES_CONSERVACAO = ['var(--success)', 'var(--warning)', 'var(--destructive)']
@@ -96,9 +96,9 @@ export default function Relatorios() {
           {/* Cards de resumo */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             {[
-              { label: 'No Pátio',      value: qtdPatio,      icon: Warehouse, cor: 'var(--success)' },
-              { label: 'Com Clientes',  value: qtdClientes,   icon: Truck,     cor: 'var(--primary)' },
-              { label: 'Em Manutenção', value: qtdManutencao, icon: Wrench,    cor: 'var(--warning)'  },
+              { label: 'No Pátio',      value: qtdPatio,      icon: 'warehouse', cor: 'var(--success)' },
+              { label: 'Com Clientes',  value: qtdClientes,   icon: 'truck',     cor: 'var(--primary)' },
+              { label: 'Em Manutenção', value: qtdManutencao, icon: 'wrench',    cor: 'var(--warning)'  },
             ].map(s => (
               <div key={s.label} className="stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
@@ -108,7 +108,7 @@ export default function Relatorios() {
                   borderRadius: '0.625rem',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <s.icon size={16} color={s.cor} />
+                  <Icon name={s.icon} size={16} color={s.cor} />
                 </div>
                 <div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 800, color: s.cor, lineHeight: 1 }}>{s.value}</div>

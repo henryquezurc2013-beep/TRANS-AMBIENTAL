@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react'
-import { CheckCircle, AlertCircle, Shield, X } from 'lucide-react'
+import Icon from './Icon'
 
 type ToastType = 'success' | 'error' | 'info'
 
@@ -15,7 +15,7 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null)
 
-const ICON_MAP = { success: CheckCircle, error: AlertCircle, info: Shield }
+const ICON_MAP: Record<ToastType, string> = { success: 'check_circle', error: 'alert_circle', info: 'shield' }
 const COLOR_MAP = {
   success: 'hsl(142,60%,65%)',
   error:   'hsl(0,80%,72%)',
@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {toasts.map(t => {
-          const Icon = ICON_MAP[t.type]
+          const iconName = ICON_MAP[t.type]
           const color = COLOR_MAP[t.type]
           return (
             <div
@@ -65,13 +65,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 borderLeft: `3px solid ${color}`,
               }}
             >
-              <Icon size={15} color={color} style={{ flexShrink: 0 }} />
+              <Icon name={iconName} size={15} color={color} style={{ flexShrink: 0 }} />
               <span style={{ flex: 1 }}>{t.message}</span>
               <button
                 onClick={e => { e.stopPropagation(); remove(t.id) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 0, display: 'flex', flexShrink: 0 }}
               >
-                <X size={13} />
+                <Icon name="x" size={13} />
               </button>
             </div>
           )

@@ -1,5 +1,5 @@
 import { Controle } from '../services/dataService'
-import { Printer, X, AlertTriangle } from 'lucide-react'
+import Icon from './Icon'
 
 interface Props {
   atrasados: Controle[]
@@ -143,10 +143,10 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={18} color="var(--destructive)" />
+            <Icon name="alert" size={18} color="var(--destructive)" />
             <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Relatório de Atrasados</h2>
           </div>
-          <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={onClose}><X size={18} /></button>
+          <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={onClose}><Icon name="x" size={18} /></button>
         </div>
 
         {/* Preview resumido */}
@@ -213,7 +213,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
             style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', background: 'hsl(0,84%,55%)' }}
             onClick={imprimir}
           >
-            <Printer size={15} /> Imprimir Relatório
+            <Icon name="printer" size={15} /> Imprimir Relatório
           </button>
         </div>
       </div>

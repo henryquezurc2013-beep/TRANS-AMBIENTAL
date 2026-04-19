@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { Plus, Pencil, Check, X, Trash2, AlertTriangle, Loader2, Search } from 'lucide-react'
 import { db, Cliente, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -131,7 +131,7 @@ export default function Clientes() {
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
+            <Icon name="search" size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
             <input
               className="input-field"
               style={{ paddingLeft: '2rem', width: '220px' }}
@@ -140,7 +140,7 @@ export default function Clientes() {
               onChange={e => setBusca(e.target.value)}
             />
           </div>
-          <button className="btn-primary" onClick={() => setModalAberto(true)}><Plus size={14} /> Novo cliente</button>
+          <button className="btn-primary" onClick={() => setModalAberto(true)}><Icon name="plus" size={14} /> Novo cliente</button>
         </div>
       </div>
 
@@ -169,7 +169,7 @@ export default function Clientes() {
                           <div style={{ position: 'relative' }}>
                             <input className="input-field" placeholder="CEP (00000-000)" value={editCep} onChange={e => handleEditCepChange(e.target.value)} maxLength={9}
                               style={{ minWidth: '90px', paddingRight: editBuscandoCep ? '2rem' : undefined }} />
-                            {editBuscandoCep && <Loader2 size={13} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />}
+                            {editBuscandoCep && <Icon name="loader" size={13} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />}
                           </div>
                           {editErroCep && <span style={{ fontSize: '0.7rem', color: 'var(--destructive)' }}>{editErroCep}</span>}
                           <input className="input-field" style={{ minWidth: '90px' }} placeholder="Endereço" value={editForm.endereco ?? ''} onChange={e => setEditForm(f => ({ ...f, endereco: e.target.value }))} />
@@ -178,8 +178,8 @@ export default function Clientes() {
                       <td>{inp(editForm.bairro_cidade ?? '', v => setEditForm(f => ({ ...f, bairro_cidade: v })), 'Bairro/Cidade')}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button className="btn-success" style={{ padding: '0.25rem 0.5rem' }} onClick={() => salvarEdicao(c)}><Check size={13} /></button>
-                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => { setEditandoId(null); setEditCep(''); setEditErroCep('') }}><X size={13} /></button>
+                          <button className="btn-success" style={{ padding: '0.25rem 0.5rem' }} onClick={() => salvarEdicao(c)}><Icon name="check" size={13} /></button>
+                          <button className="btn-destructive" style={{ padding: '0.25rem 0.5rem' }} onClick={() => { setEditandoId(null); setEditCep(''); setEditErroCep('') }}><Icon name="x" size={13} /></button>
                         </div>
                       </td>
                     </>
@@ -202,7 +202,7 @@ export default function Clientes() {
                               setEditCep(''); setEditErroCep('')
                             }}
                           >
-                            <Pencil size={13} />
+                            <Icon name="pencil" size={13} />
                           </button>
                           <button
                             className="btn-ghost"
@@ -210,7 +210,7 @@ export default function Clientes() {
                             title="Excluir"
                             onClick={() => setClienteParaExcluir(c)}
                           >
-                            <Trash2 size={13} />
+                            <Icon name="trash" size={13} />
                           </button>
                         </div>
                       </td>
@@ -229,7 +229,7 @@ export default function Clientes() {
           <div className="modal-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Novo Cliente</h2>
-              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal}><X size={17} /></button>
+              <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal}><Icon name="x" size={17} /></button>
             </div>
             <form onSubmit={handleNovo} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               <div className="form-group">
@@ -252,7 +252,7 @@ export default function Clientes() {
                   <div style={{ position: 'relative' }}>
                     <input className="input-field" placeholder="00000-000" value={cep} onChange={e => handleCepChange(e.target.value)} maxLength={9}
                       style={{ paddingRight: buscandoCep ? '2rem' : undefined }} />
-                    {buscandoCep && <Loader2 size={13} style={{ position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />}
+                    {buscandoCep && <Icon name="loader" size={13} style={{ position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />}
                   </div>
                   {erroCep && <span style={{ fontSize: '0.75rem', color: 'var(--destructive)', marginTop: '0.25rem', display: 'block' }}>{erroCep}</span>}
                 </div>
@@ -272,7 +272,7 @@ export default function Clientes() {
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
                 <button type="button" className="btn-secondary" onClick={fecharModal}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={salvando}>
-                  {salvando ? 'Salvando...' : <><Plus size={14} /> Cadastrar</>}
+                  {salvando ? 'Salvando...' : <><Icon name="plus" size={14} /> Cadastrar</>}
                 </button>
               </div>
             </form>
@@ -286,7 +286,7 @@ export default function Clientes() {
           <div className="modal-content" style={{ maxWidth: '420px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
               <div style={{ width: '2.5rem', height: '2.5rem', flexShrink: 0, background: 'hsl(0 84% 60% / 0.12)', border: '1px solid hsl(0 84% 60% / 0.3)', borderRadius: '0.625rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertTriangle size={17} color="var(--destructive)" />
+                <Icon name="alert" size={17} color="var(--destructive)" />
               </div>
               <div>
                 <h2 style={{ margin: '0 0 0.375rem', fontSize: '1rem', fontWeight: 600 }}>Excluir cliente</h2>
@@ -300,7 +300,7 @@ export default function Clientes() {
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button className="btn-secondary" disabled={excluindo} onClick={() => setClienteParaExcluir(null)}>Cancelar</button>
               <button className="btn-destructive" disabled={excluindo} style={{ background: 'var(--destructive)', color: 'white', border: 'none' }} onClick={handleExcluir}>
-                {excluindo ? 'Excluindo...' : <><Trash2 size={13} /> Excluir</>}
+                {excluindo ? 'Excluindo...' : <><Icon name="trash" size={13} /> Excluir</>}
               </button>
             </div>
           </div>

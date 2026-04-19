@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Download } from 'lucide-react'
 import { db, Controle as IControle } from '../services/dataService'
+import Icon from '../components/Icon'
 import { exportarTabelaCSV } from '../services/exportService'
 import { useToast } from '../components/Toast'
 import StatusBadge from '../components/StatusBadge'
@@ -89,7 +89,7 @@ export default function ControlePage() {
             onChange={e => setBusca(e.target.value)}
           />
           <button className="btn-secondary" onClick={handleExport} style={{ fontSize: '0.8125rem', padding: '0.5rem 0.875rem', height: '38px' }}>
-            <Download size={13} /> Exportar
+            <Icon name="download" size={13} /> Exportar
           </button>
         </div>
       </div>

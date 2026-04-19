@@ -1,39 +1,35 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
-import {
-  LayoutDashboard, PlusCircle, ClipboardList, Warehouse,
-  AlertTriangle, Package, Users, ArrowLeftRight, Wrench,
-  FileText, ScrollText, LogOut, Menu, Search, Bell,
-} from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from './Toast'
+import Icon from './Icon'
 
 const GRUPOS = [
   {
     label: 'Principal',
     itens: [
-      { path: '/dashboard',       label: 'Dashboard',       icon: LayoutDashboard, perm: 'Dashboard'            },
-      { path: '/cadastro-rapido', label: 'Cadastro Rápido', icon: PlusCircle,      perm: 'Cadastro_Rapido'      },
-      { path: '/controle',        label: 'Controle',        icon: ClipboardList,   perm: 'Controle'             },
+      { path: '/dashboard',       label: 'Dashboard',       icon: 'dashboard',  perm: 'Dashboard'            },
+      { path: '/cadastro-rapido', label: 'Cadastro Rápido', icon: 'plus_circle', perm: 'Cadastro_Rapido'     },
+      { path: '/controle',        label: 'Controle',        icon: 'clipboard',  perm: 'Controle'             },
     ],
   },
   {
     label: 'Operação',
     itens: [
-      { path: '/estoque',               label: 'Estoque',       icon: Warehouse,      perm: 'Estoque'                  },
-      { path: '/atrasados',             label: 'Atrasados',     icon: AlertTriangle,  perm: 'Atrasados'                },
-      { path: '/containers',            label: 'Containers',    icon: Package,        perm: 'Cadastro_Containers'      },
-      { path: '/troca-container',       label: 'Troca',         icon: ArrowLeftRight, perm: 'Troca_Container'          },
-      { path: '/manutencao',            label: 'Manutenção',    icon: Wrench,         perm: 'Manutencao'               },
-      { path: '/lancamento-manutencao', label: 'Lançar Manut.', icon: Wrench,         perm: 'Lancamento_Manutencao'    },
+      { path: '/estoque',               label: 'Estoque',       icon: 'warehouse', perm: 'Estoque'                  },
+      { path: '/atrasados',             label: 'Atrasados',     icon: 'alert',     perm: 'Atrasados'                },
+      { path: '/containers',            label: 'Containers',    icon: 'package',   perm: 'Cadastro_Containers'      },
+      { path: '/troca-container',       label: 'Troca',         icon: 'swap',      perm: 'Troca_Container'          },
+      { path: '/manutencao',            label: 'Manutenção',    icon: 'wrench',    perm: 'Manutencao'               },
+      { path: '/lancamento-manutencao', label: 'Lançar Manut.', icon: 'wrench',    perm: 'Lancamento_Manutencao'    },
     ],
   },
   {
     label: 'Gestão',
     itens: [
-      { path: '/clientes',   label: 'Clientes',   icon: Users,      perm: 'Clientes'   },
-      { path: '/relatorios', label: 'Relatórios', icon: FileText,   perm: 'Relatorios' },
-      { path: '/logs',       label: 'Logs',       icon: ScrollText, perm: 'Logs'       },
+      { path: '/clientes',   label: 'Clientes',   icon: 'users',  perm: 'Clientes'   },
+      { path: '/relatorios', label: 'Relatórios', icon: 'file',   perm: 'Relatorios' },
+      { path: '/logs',       label: 'Logs',       icon: 'scroll', perm: 'Logs'       },
     ],
   },
 ]
@@ -77,7 +73,7 @@ interface SidebarProps {
 function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLogout }: SidebarProps) {
   return (
     <div style={{
-      width: '16rem', height: '100vh',
+      width: '15rem', height: '100vh',
       background: 'var(--sidebar)',
       borderRight: '1px solid var(--border-subtle)',
       display: 'flex', flexDirection: 'column',
@@ -93,7 +89,7 @@ function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLo
           src="/logo.svg"
           alt="Trans Ambiental"
           style={{
-            width: '120px', height: 'auto', objectFit: 'contain',
+            width: '100px', height: 'auto', objectFit: 'contain',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
             transition: 'transform 0.4s ease', cursor: 'pointer',
           }}
@@ -109,27 +105,18 @@ function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLo
       <nav style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.5rem 0' }}>
         {gruposVisiveis.map(grupo => grupo.itens.length === 0 ? null : (
           <div key={grupo.label} style={{ marginBottom: '0.25rem' }}>
-            <div style={{
-              fontSize: '0.6rem', fontWeight: 700, color: 'var(--fg-muted)',
-              textTransform: 'uppercase', letterSpacing: '0.1em',
-              padding: '0.625rem 0.75rem 0.25rem',
-            }}>
-              {grupo.label}
-            </div>
-            {grupo.itens.map(item => {
-              const Icon = item.icon
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={onCloseMobile}
-                  className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-                >
-                  <Icon size={15} />
-                  {item.label}
-                </NavLink>
-              )
-            })}
+            <span className="sidebar-section-label">{grupo.label}</span>
+            {grupo.itens.map(item => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onCloseMobile}
+                className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+              >
+                <Icon name={item.icon} size={15} />
+                {item.label}
+              </NavLink>
+            ))}
           </div>
         ))}
       </nav>
@@ -143,7 +130,7 @@ function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLo
           </div>
         </div>
         <button onClick={onLogout} className="btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: '0.8125rem' }}>
-          <LogOut size={13} />
+          <Icon name="logout" size={13} />
           Sair
         </button>
       </div>
@@ -218,7 +205,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           position: 'sticky', top: 0, zIndex: 50,
         }}>
           <button onClick={() => setSidebarOpen(true)} className="btn-ghost" style={{ padding: '0.375rem' }}>
-            <Menu size={20} />
+            <Icon name="menu" size={20} />
           </button>
           <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
           <div style={{ width: '2rem' }} />
@@ -253,7 +240,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Busca */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <Search size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
+              <Icon name="search" size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
               <input
                 className="input-field"
                 style={{ paddingLeft: '2rem', width: '200px', height: '32px', fontSize: '0.8125rem' }}
@@ -263,7 +250,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Notificação */}
             <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
-              <Bell size={16} />
+              <Icon name="bell" size={16} />
             </button>
           </div>
         </div>
@@ -275,7 +262,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         @media (min-width: 768px) {
           #sidebar-desktop  { display: block !important; }
           #sidebar-mobile   { display: none !important; }
-          #main-content     { margin-left: 16rem !important; }
+          #main-content     { margin-left: 15rem !important; }
           #mobile-header    { display: none !important; }
           #desktop-header   { display: block !important; }
         }

@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { Wrench } from 'lucide-react'
 import { db, Container, registrarLog } from '../services/dataService'
+import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -79,7 +79,7 @@ export default function LancamentoManutencao() {
 
       <div className="card" style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <Wrench size={18} color="var(--warning)" />
+          <Icon name="wrench" size={18} color="var(--warning)" />
           <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Nova Ocorrência</h2>
         </div>
 
@@ -152,7 +152,7 @@ export default function LancamentoManutencao() {
           </label>
 
           <button type="submit" className="btn-warning" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}>
-            {loading ? 'Salvando...' : <><Wrench size={15} /> Lançar Manutenção</>}
+            {loading ? 'Salvando...' : <><Icon name="wrench" size={15} /> Lançar Manutenção</>}
           </button>
         </form>
       </div>

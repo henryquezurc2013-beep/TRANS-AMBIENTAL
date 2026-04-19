@@ -1,11 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Package, Users, Truck, CheckCircle, AlertTriangle, Wrench,
-  Download, FileSpreadsheet, Sun, Moon, Zap, Plus, Search, Bell,
-  ArrowLeftRight, X, ChevronRight,
-} from 'lucide-react'
 import { db, Controle, Manutencao, Log } from '../services/dataService'
+import Icon from '../components/Icon'
 import type { Container, Cliente } from '../services/dataService'
 import { exportarDadosJSON, exportarTabelaCSV } from '../services/exportService'
 import { useToast } from '../components/Toast'
@@ -15,11 +11,11 @@ import type { StatCardProps } from '../components/StatCard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getSaudacao(): { texto: string; Icone: typeof Sun; cor: string } {
+function getSaudacao(): { texto: string; icone: string; cor: string } {
   const h = new Date().getHours()
-  if (h >= 5 && h < 12)  return { texto: 'Bom dia',   Icone: Sun,  cor: 'var(--warning)' }
-  if (h >= 12 && h < 18) return { texto: 'Boa tarde', Icone: Sun,  cor: 'var(--pending)'  }
-  return                         { texto: 'Boa noite', Icone: Moon, cor: 'var(--primary)'  }
+  if (h >= 5 && h < 12)  return { texto: 'Bom dia',   icone: 'sun',  cor: 'var(--warning)' }
+  if (h >= 12 && h < 18) return { texto: 'Boa tarde', icone: 'sun',  cor: 'var(--pending)'  }
+  return                         { texto: 'Boa noite', icone: 'moon', cor: 'var(--primary)'  }
 }
 
 function dataFormatada() {
@@ -182,7 +178,7 @@ export default function Dashboard() {
     {
       label: 'Total containers',
       value: containers.length,
-      icon: Package,
+      icon: 'package',
       accent: 'hsl(217,80%,65%)',
       delta: { dir: 'up', text: '+4 este mês' },
       trend: genTrend(1),
@@ -196,7 +192,7 @@ export default function Dashboard() {
     {
       label: 'Disponíveis',
       value: disponiveis,
-      icon: CheckCircle,
+      icon: 'check_circle',
       accent: 'hsl(142,60%,55%)',
       delta: { dir: 'flat', text: `${disponiveis} de ${containers.length}` },
       trend: genTrend(2),
@@ -208,7 +204,7 @@ export default function Dashboard() {
     {
       label: 'Em uso',
       value: emUso,
-      icon: Truck,
+      icon: 'truck',
       accent: 'hsl(217,91%,60%)',
       delta: { dir: 'up', text: `+${entregasSemana} esta semana` },
       trend: genTrend(3),
@@ -221,7 +217,7 @@ export default function Dashboard() {
     {
       label: 'Atrasados',
       value: atrasados.length,
-      icon: AlertTriangle,
+      icon: 'alert',
       accent: 'hsl(0,75%,65%)',
       delta: { dir: atrasados.length > 0 ? 'down' : 'flat', text: '−2 vs ontem' },
       trend: genTrend(4),
@@ -235,7 +231,7 @@ export default function Dashboard() {
     {
       label: 'Manutenção',
       value: manutPend,
-      icon: Wrench,
+      icon: 'wrench',
       accent: 'hsl(38,80%,60%)',
       delta: { dir: 'flat', text: 'pendentes' },
       trend: genTrend(5),
@@ -248,7 +244,7 @@ export default function Dashboard() {
     {
       label: 'Clientes ativos',
       value: clientes.length,
-      icon: Users,
+      icon: 'users',
       accent: 'hsl(260,60%,70%)',
       delta: { dir: clientesNovos > 0 ? 'up' : 'flat', text: clientesNovos > 0 ? `+${clientesNovos} este mês` : 'sem novos' },
       trend: genTrend(6),
@@ -278,7 +274,7 @@ export default function Dashboard() {
     </div>
   )
 
-  const { texto: saudTxt, Icone: SaudIcone, cor: saudCor } = getSaudacao()
+  const { texto: saudTxt, icone: saudIcone, cor: saudCor } = getSaudacao()
   const PERIODOS: { key: Periodo; label: string }[] = [
     { key: 'hoje', label: 'Hoje' },
     { key: '7d',   label: '7d'   },
@@ -314,7 +310,7 @@ export default function Dashboard() {
           <div style={{ flex: 1 }} />
 
           <div style={{ position: 'relative' }}>
-            <Search size={12} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
+            <Icon name="search" size={12} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
             <input
               className="input-field"
               style={{ paddingLeft: '2rem', paddingRight: '2.5rem', width: '210px', height: '32px', fontSize: '0.78rem' }}
@@ -329,7 +325,7 @@ export default function Dashboard() {
           </div>
 
           <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
-            <Bell size={15} />
+            <Icon name="bell" size={15} />
             <span style={{ position: 'absolute', top: '3px', right: '3px', width: '7px', height: '7px', borderRadius: '50%', background: 'var(--destructive)', border: '1.5px solid var(--bg)' }} />
           </button>
         </div>
@@ -338,7 +334,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-              <SaudIcone size={17} color={saudCor} style={{ flexShrink: 0 }} />
+              <Icon name={saudIcone} size={17} color={saudCor} style={{ flexShrink: 0 }} />
               <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--fg)', lineHeight: 1.2 }}>
                 {saudTxt}, {sessao?.usuarioAtual}
               </h1>
@@ -370,10 +366,10 @@ export default function Dashboard() {
             </div>
             <div style={{ width: '1px', height: '24px', background: 'var(--border)', flexShrink: 0 }} />
             <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', height: '34px' }} onClick={handleExportJSON}>
-              <Download size={12} /> Backup
+              <Icon name="download" size={12} /> Backup
             </button>
             <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', height: '34px' }} onClick={handleExportCSV}>
-              <FileSpreadsheet size={12} /> CSV
+              <Icon name="file_spreadsheet" size={12} /> CSV
             </button>
             <button
               style={{
@@ -389,10 +385,10 @@ export default function Dashboard() {
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
               onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
             >
-              <Zap size={12} /> Troca rápida
+              <Icon name="zap" size={12} /> Troca rápida
             </button>
             <button className="btn-primary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.875rem', height: '34px' }} onClick={() => navigate('/cadastro-rapido')}>
-              <Plus size={12} /> Novo registro
+              <Icon name="plus" size={12} /> Novo registro
             </button>
           </div>
         </div>
@@ -440,7 +436,7 @@ export default function Dashboard() {
                   borderRadius: '0.6rem',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <s.icon size={17} color={s.accent} />
+                  <Icon name={s.icon} size={17} color={s.accent} />
                 </div>
                 <div>
                   <div style={{ fontSize: '0.62rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Detalhe</div>
@@ -466,7 +462,7 @@ export default function Dashboard() {
                   Abrir {s.label} →
                 </button>
                 <button className="btn-ghost" style={{ padding: '0.375rem' }} onClick={() => setSelectedStat(null)}>
-                  <X size={15} />
+                  <Icon name="x" size={15} />
                 </button>
               </div>
             </div>
@@ -604,7 +600,7 @@ export default function Dashboard() {
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px hsl(38 92% 50% / 0.5)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px hsl(38 92% 50% / 0.35)' }}
         >
-          <ArrowLeftRight size={15} />
+          <Icon name="swap" size={15} />
           Troca rápida
           <kbd style={{ background: 'rgba(26,18,8,0.25)', border: '1px solid rgba(26,18,8,0.2)', borderRadius: '0.25rem', padding: '0.05rem 0.3rem', fontSize: '0.68rem', fontWeight: 700 }}>T</kbd>
         </button>
@@ -625,21 +621,21 @@ export default function Dashboard() {
           <div style={{ padding: '0.875rem 1rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '2rem', height: '2rem', background: 'hsl(38 92% 50% / 0.12)', border: '1px solid hsl(38 92% 50% / 0.25)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ArrowLeftRight size={13} color="hsl(38,92%,50%)" />
+                <Icon name="swap" size={13} color="hsl(38,92%,50%)" />
               </div>
               <div>
                 <div style={{ fontSize: '0.875rem', fontWeight: 700 }}>Troca de container</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)' }}>Retirar e entregar ao mesmo cliente</div>
               </div>
             </div>
-            <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setShowTroca(false)}><X size={14} /></button>
+            <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setShowTroca(false)}><Icon name="x" size={14} /></button>
           </div>
 
           {/* Body */}
           <div style={{ padding: '1rem' }}>
             <div className="form-group" style={{ marginBottom: '0.875rem' }}>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <Users size={10} /> Cliente
+                <Icon name="users" size={10} /> Cliente
               </label>
               <input className="input-field" placeholder="Nome do cliente..." value={trocaCliente} onChange={e => setTrocaCliente(e.target.value)} />
             </div>
@@ -656,7 +652,7 @@ export default function Dashboard() {
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1.125rem' }}>
-                <ArrowLeftRight size={15} color="var(--fg-muted)" />
+                <Icon name="swap" size={15} color="var(--fg-muted)" />
               </div>
               <div className="form-group">
                 <label className="form-label" style={{ color: 'hsl(142,60%,55%)' }}>Entregar</label>
@@ -687,7 +683,7 @@ export default function Dashboard() {
                 onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
               >
-                <Zap size={13} /> Confirmar troca
+                <Icon name="zap" size={13} /> Confirmar troca
               </button>
             </div>
           </div>
@@ -696,7 +692,7 @@ export default function Dashboard() {
           <div style={{ padding: '0.625rem 1rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
             <span>Precisa de mais opções?</span>
             <button className="btn-ghost" style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => { setShowTroca(false); navigate('/troca-container') }}>
-              Troca completa <ChevronRight size={11} />
+              Troca completa <Icon name="chevron_right" size={11} />
             </button>
           </div>
         </div>
