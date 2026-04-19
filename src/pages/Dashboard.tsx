@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { db, Controle, Manutencao, Log } from '../services/dataService'
+import { db, Controle, Manutencao, Log, registrarLog } from '../services/dataService'
 import Icon from '../components/Icon'
 import type { Container, Cliente } from '../services/dataService'
 import { exportarDadosJSON, exportarTabelaCSV } from '../services/exportService'
@@ -85,10 +85,15 @@ export default function Dashboard() {
   const [loading,     setLoading]     = useState(true)
   const [periodo,     setPeriodo]     = useState<Periodo>('7d')
   const [selectedStat, setSelectedStat] = useState<number | null>(null)
-  const [showTroca,   setShowTroca]   = useState(false)
-  const [trocaCliente,  setTrocaCliente]  = useState('')
-  const [trocaRetirar,  setTrocaRetirar]  = useState('')
-  const [trocaEntregar, setTrocaEntregar] = useState('')
+  const [showTroca,       setShowTroca]       = useState(false)
+  const [trocaCliente,    setTrocaCliente]    = useState('')
+  const [trocaRetirar,    setTrocaRetirar]    = useState('')
+  const [trocaEntregar,   setTrocaEntregar]   = useState('')
+  const [trocaBuscando,   setTrocaBuscando]   = useState(false)
+  const [trocaRetirarOk,  setTrocaRetirarOk]  = useState(false)
+  const [trocaRetirarErro, setTrocaRetirarErro] = useState('')
+  const [trocaRegistro,   setTrocaRegistro]   = useState<Controle | null>(null)
+  const [trocaConfirmando, setTrocaConfirmando] = useState(false)
 
   // Carregar dados
   useEffect(() => {
@@ -116,13 +121,120 @@ export default function Dashboard() {
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if (e.key === 't' || e.key === 'T') setShowTroca(v => !v)
-      if (e.key === 'Escape') { setShowTroca(false); setSelectedStat(null) }
+      if (e.key === 'Escape') { fecharPainelTroca(); setSelectedStat(null) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const irTroca = useCallback(() => navigate('/troca-container'), [navigate])
+  // ── Troca rápida: debounce busca container ────────────────────────────────
+  useEffect(() => {
+    const val = trocaRetirar.trim()
+    if (!val) {
+      setTrocaRetirarOk(false)
+      setTrocaRetirarErro('')
+      setTrocaCliente('')
+      setTrocaRegistro(null)
+      setTrocaBuscando(false)
+      return
+    }
+    setTrocaBuscando(true)
+    setTrocaRetirarErro('')
+    const timer = setTimeout(async () => {
+      try {
+        const abertos = await db.controle.getEmAberto()
+        const registro = abertos.find(r => r.id_container.toLowerCase() === val.toLowerCase())
+        if (registro) {
+          setTrocaCliente(registro.cliente)
+          setTrocaRetirarOk(true)
+          setTrocaRegistro(registro)
+          setTrocaRetirarErro('')
+        } else {
+          setTrocaCliente('')
+          setTrocaRetirarOk(false)
+          setTrocaRegistro(null)
+          setTrocaRetirarErro('Container não encontrado ou não está em uso')
+        }
+      } catch {
+        setTrocaRetirarErro('Erro ao buscar container')
+      }
+      setTrocaBuscando(false)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [trocaRetirar])
+
+  function fecharPainelTroca() {
+    setShowTroca(false)
+    setTrocaRetirar('')
+    setTrocaEntregar('')
+    setTrocaCliente('')
+    setTrocaRetirarOk(false)
+    setTrocaRetirarErro('')
+    setTrocaRegistro(null)
+    setTrocaBuscando(false)
+    setTrocaConfirmando(false)
+  }
+
+  async function confirmarTrocaRapida() {
+    if (!trocaRetirarOk || !trocaRegistro) {
+      toast('Busque e confirme o container a retirar', 'error'); return
+    }
+    if (!trocaEntregar) {
+      toast('Selecione o container a entregar', 'error'); return
+    }
+    if (trocaRetirar.trim().toLowerCase() === trocaEntregar.toLowerCase()) {
+      toast('Container antigo e novo devem ser diferentes', 'error'); return
+    }
+    setTrocaConfirmando(true)
+    try {
+      const contNovo = containers.find(c => c.id_container === trocaEntregar)!
+      const dataTroca = new Date().toISOString().slice(0, 10)
+
+      await db.controle.update(trocaRegistro.id, {
+        data_retirada: dataTroca,
+        origem_acao: 'TROCA - RETORNOU AO PATIO',
+      })
+      await db.controle.add({
+        data_lancamento: dataTroca,
+        id_container: trocaEntregar,
+        tipo_container: contNovo.tipo_container,
+        cliente: trocaRegistro.cliente,
+        contato_cliente: trocaRegistro.contato_cliente,
+        telefone_cliente: trocaRegistro.telefone_cliente,
+        data_entrega: dataTroca,
+        previsao_retirada: trocaRegistro.previsao_retirada,
+        data_retirada: null,
+        material: trocaRegistro.material,
+        observacao: '',
+        origem_acao: 'TROCA RÁPIDA - NOVO CONTAINER NO CLIENTE',
+      })
+      await db.containers.updateByIdContainer(trocaRetirar.trim(), {
+        status_operacional: 'DISPONIVEL',
+        liberado_para_entrega: 'SIM',
+      })
+      await db.containers.updateByIdContainer(trocaEntregar, {
+        status_operacional: 'EM USO',
+        liberado_para_entrega: 'NAO',
+      })
+      await registrarLog(
+        sessao!.usuarioAtual,
+        'TROCA CONTAINER',
+        `Container ${trocaRetirar.trim()} trocado por ${trocaEntregar} no cliente ${trocaRegistro.cliente}`
+      )
+      toast(`Troca registrada! ${trocaRetirar.trim()} → ${trocaEntregar}`, 'success')
+      fecharPainelTroca()
+      // Atualiza dados locais
+      const [newContainers, newControles] = await Promise.all([
+        db.containers.getAll(),
+        db.controle.getAll(),
+      ])
+      setContainers(newContainers)
+      setControles(newControles)
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Erro ao realizar troca', 'error')
+    }
+    setTrocaConfirmando(false)
+  }
 
   // ── Stats derivados ───────────────────────────────────────────────────────
   const emUso       = containers.filter(c => c.status_operacional === 'EM USO').length
@@ -628,42 +740,111 @@ export default function Dashboard() {
                 <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)' }}>Retirar e entregar ao mesmo cliente</div>
               </div>
             </div>
-            <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={() => setShowTroca(false)}><Icon name="x" size={14} /></button>
+            <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharPainelTroca} disabled={trocaConfirmando}>
+              <Icon name="x" size={14} />
+            </button>
           </div>
 
           {/* Body */}
           <div style={{ padding: '1rem' }}>
+
+            {/* Campo Retirar */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'flex-start', marginBottom: '0.625rem' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ color: 'hsl(0,75%,65%)' }}>Retirar</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="input-field mono"
+                    placeholder="Ex: CT-A042"
+                    value={trocaRetirar}
+                    onChange={e => { setTrocaRetirar(e.target.value); setTrocaRetirarOk(false); setTrocaRetirarErro('') }}
+                    disabled={trocaConfirmando}
+                    style={{
+                      borderColor: trocaRetirar
+                        ? trocaRetirarOk
+                          ? 'hsl(142 60% 45% / 0.7)'
+                          : trocaRetirarErro
+                            ? 'hsl(0 75% 55% / 0.7)'
+                            : 'hsl(0 75% 65% / 0.4)'
+                        : undefined,
+                      background: 'hsl(0 75% 65% / 0.05)',
+                      paddingRight: trocaBuscando ? '2rem' : undefined,
+                    }}
+                  />
+                  {trocaBuscando && (
+                    <Icon name="loader" size={12} style={{
+                      position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--fg-muted)', animation: 'spin 1s linear infinite',
+                    }} />
+                  )}
+                  {trocaRetirarOk && !trocaBuscando && (
+                    <Icon name="check_circle" size={12} style={{
+                      position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
+                      color: 'hsl(142,60%,55%)',
+                    }} />
+                  )}
+                </div>
+                {trocaRetirarErro && (
+                  <span style={{ fontSize: '0.65rem', color: 'var(--destructive)', marginTop: '0.2rem', display: 'block' }}>
+                    {trocaRetirarErro}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1.5rem' }}>
+                <Icon name="swap" size={15} color="var(--fg-muted)" />
+              </div>
+
+              {/* Campo Entregar */}
+              <div className="form-group">
+                <label className="form-label" style={{ color: 'hsl(142,60%,55%)' }}>Entregar</label>
+                <select
+                  className="select-field mono"
+                  value={trocaEntregar}
+                  onChange={e => setTrocaEntregar(e.target.value)}
+                  disabled={trocaConfirmando}
+                  style={{
+                    fontSize: '0.8125rem',
+                    borderColor: trocaEntregar ? 'hsl(142 60% 45% / 0.7)' : undefined,
+                    background: trocaEntregar ? 'hsl(142 60% 55% / 0.05)' : undefined,
+                  }}
+                >
+                  <option value="">Selecionar...</option>
+                  {containers
+                    .filter(c =>
+                      c.status_operacional === 'DISPONIVEL' &&
+                      c.liberado_para_entrega === 'SIM' &&
+                      c.status_cadastro === 'ATIVO' &&
+                      c.id_container !== trocaRetirar.trim()
+                    )
+                    .map(c => (
+                      <option key={c.id} value={c.id_container}>
+                        {c.id_container}{c.capacidade ? ` — ${c.capacidade}` : ''}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+            </div>
+
+            {/* Campo Cliente — preenchido automaticamente */}
             <div className="form-group" style={{ marginBottom: '0.875rem' }}>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Icon name="users" size={10} /> Cliente
+                {trocaRetirarOk && (
+                  <span style={{ marginLeft: 'auto', fontSize: '0.6rem', color: 'hsl(142,60%,55%)', fontWeight: 500, letterSpacing: 0 }}>
+                    preenchido automaticamente
+                  </span>
+                )}
               </label>
-              <input className="input-field" placeholder="Nome do cliente..." value={trocaCliente} onChange={e => setTrocaCliente(e.target.value)} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.875rem' }}>
-              <div className="form-group">
-                <label className="form-label" style={{ color: 'hsl(0,75%,65%)' }}>Retirar</label>
-                <input
-                  className="input-field mono"
-                  placeholder="Cód. container"
-                  value={trocaRetirar}
-                  onChange={e => setTrocaRetirar(e.target.value)}
-                  style={{ borderColor: trocaRetirar ? 'hsl(0 75% 65% / 0.5)' : undefined, background: 'hsl(0 75% 65% / 0.05)' }}
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1.125rem' }}>
-                <Icon name="swap" size={15} color="var(--fg-muted)" />
-              </div>
-              <div className="form-group">
-                <label className="form-label" style={{ color: 'hsl(142,60%,55%)' }}>Entregar</label>
-                <input
-                  className="input-field mono"
-                  placeholder="Cód. container"
-                  value={trocaEntregar}
-                  onChange={e => setTrocaEntregar(e.target.value)}
-                  style={{ borderColor: trocaEntregar ? 'hsl(142 60% 55% / 0.5)' : undefined, background: 'hsl(142 60% 55% / 0.05)' }}
-                />
-              </div>
+              <input
+                className="input-field"
+                placeholder="Preenchido ao buscar o container..."
+                value={trocaCliente}
+                onChange={e => setTrocaCliente(e.target.value)}
+                disabled={trocaConfirmando}
+                style={{ borderColor: trocaRetirarOk ? 'hsl(142 60% 45% / 0.5)' : undefined }}
+              />
             </div>
 
             <div style={{ padding: '0.5rem 0.75rem', background: 'var(--card-2)', border: '1px solid var(--border-soft)', borderRadius: '0.5rem', fontSize: '0.72rem', color: 'var(--fg-muted)', marginBottom: '0.875rem' }}>
@@ -671,19 +852,34 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center', fontSize: '0.8rem' }} onClick={() => setShowTroca(false)}>Cancelar</button>
+              <button
+                className="btn-secondary"
+                style={{ flex: 1, justifyContent: 'center', fontSize: '0.8rem' }}
+                onClick={fecharPainelTroca}
+                disabled={trocaConfirmando}
+              >
+                Cancelar
+              </button>
               <button
                 style={{
                   flex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                  padding: '0.5rem 1rem', background: 'hsl(38,92%,50%)', color: '#1a1208',
+                  padding: '0.5rem 1rem',
+                  background: trocaRetirarOk && trocaEntregar && !trocaConfirmando
+                    ? 'hsl(38,92%,50%)'
+                    : 'hsl(38,92%,50% / 0.45)',
+                  color: '#1a1208',
                   border: 'none', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.15s',
+                  cursor: trocaRetirarOk && trocaEntregar && !trocaConfirmando ? 'pointer' : 'not-allowed',
+                  fontFamily: 'Inter, system-ui, sans-serif', transition: 'opacity 0.15s',
+                  opacity: trocaConfirmando ? 0.7 : 1,
                 }}
-                onClick={() => { setShowTroca(false); irTroca() }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                onClick={confirmarTrocaRapida}
+                disabled={!trocaRetirarOk || !trocaEntregar || trocaConfirmando}
               >
-                <Icon name="zap" size={13} /> Confirmar troca
+                {trocaConfirmando
+                  ? <><Icon name="loader" size={13} style={{ animation: 'spin 1s linear infinite' }} /> Registrando...</>
+                  : <><Icon name="zap" size={13} /> Confirmar troca</>
+                }
               </button>
             </div>
           </div>
@@ -691,7 +887,7 @@ export default function Dashboard() {
           {/* Footer */}
           <div style={{ padding: '0.625rem 1rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
             <span>Precisa de mais opções?</span>
-            <button className="btn-ghost" style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => { setShowTroca(false); navigate('/troca-container') }}>
+            <button className="btn-ghost" style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => { fecharPainelTroca(); navigate('/troca-container') }}>
               Troca completa <Icon name="chevron_right" size={11} />
             </button>
           </div>
