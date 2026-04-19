@@ -10,6 +10,7 @@ export default function ControlePage() {
   const [registros, setRegistros] = useState<IControle[]>([])
   const [loading, setLoading] = useState(true)
   const [busca, setBusca] = useState('')
+
   useEffect(() => {
     db.controle.getAll().then(data => { setRegistros(data); setLoading(false) })
   }, [])
@@ -25,7 +26,7 @@ export default function ControlePage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <h1 className="page-title">Controle</h1>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Histórico de movimentações</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Histórico de movimentações</p>
         </div>
         <input
           className="input-field"
@@ -37,7 +38,7 @@ export default function ControlePage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -55,7 +56,7 @@ export default function ControlePage() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>
                   {busca ? 'Nenhum resultado' : 'Nenhum registro'}
                 </td></tr>
               ) : filtrado.map(r => (
@@ -68,8 +69,8 @@ export default function ControlePage() {
                   <td style={{ fontSize: '0.8rem' }}>{r.data_entrega.split('-').reverse().join('/')}</td>
                   <td style={{ fontSize: '0.8rem' }}>{r.previsao_retirada.split('-').reverse().join('/')}</td>
                   <td style={{ fontSize: '0.8rem' }}>{fmtData(r.data_retirada)}</td>
-                  <td style={{ color: 'hsl(210,20%,60%)', fontSize: '0.8rem' }}>{r.material || '—'}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)' }}>{r.origem_acao}</td>
+                  <td style={{ color: 'var(--fg-muted)', fontSize: '0.8rem' }}>{r.material || '—'}</td>
+                  <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{r.origem_acao}</td>
                 </tr>
               ))}
             </tbody>
@@ -77,10 +78,9 @@ export default function ControlePage() {
         </div>
       )}
 
-      <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'hsl(210,20%,40%)' }}>
+      <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
         {filtrado.length} registro(s) exibido(s)
       </div>
-
     </div>
   )
 }

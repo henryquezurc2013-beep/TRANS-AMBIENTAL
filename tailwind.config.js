@@ -30,12 +30,16 @@ export default {
           DEFAULT: "hsl(38, 92%, 50%)",
           foreground: "hsl(222, 41%, 7%)",
         },
+        pending: {
+          DEFAULT: "hsl(25, 95%, 55%)",
+          foreground: "hsl(210, 20%, 96%)",
+        },
         border: "hsl(220, 25%, 22%)",
         input: "hsl(220, 25%, 22%)",
         ring: "hsl(217, 91%, 60%)",
         muted: {
           DEFAULT: "hsl(222, 37%, 16%)",
-          foreground: "hsl(210, 20%, 60%)",
+          foreground: "hsl(210, 20%, 55%)",
         },
         sidebar: "hsl(222, 44%, 9%)",
       },

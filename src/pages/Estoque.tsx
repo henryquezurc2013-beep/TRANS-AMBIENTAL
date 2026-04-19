@@ -22,10 +22,10 @@ export default function Estoque() {
   const clienteAtual: Record<string, string> = {}
   controles.forEach(c => { clienteAtual[c.id_container] = c.cliente })
 
-  const total      = containers.length
+  const total       = containers.length
   const disponiveis = containers.filter(c => c.status_operacional === 'DISPONIVEL').length
-  const emUso      = containers.filter(c => c.status_operacional === 'EM USO').length
-  const manutencao = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
+  const emUso       = containers.filter(c => c.status_operacional === 'EM USO').length
+  const manutencao  = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
 
   const porFiltro = filtro === 'DISPONIVEL'
     ? containers.filter(c => c.status_operacional === 'DISPONIVEL')
@@ -46,24 +46,24 @@ export default function Estoque() {
   }
 
   const stats = [
-    { label: 'Total',       value: total,       color: 'hsl(217,91%,60%)' },
-    { label: 'Disponíveis', value: disponiveis, color: 'hsl(142,71%,45%)' },
-    { label: 'Em Uso',      value: emUso,       color: 'hsl(38,92%,50%)'  },
-    { label: 'Manutenção',  value: manutencao,  color: 'hsl(0,84%,60%)'   },
+    { label: 'Total',       value: total,       color: 'var(--primary)'     },
+    { label: 'Disponíveis', value: disponiveis, color: 'var(--success)'     },
+    { label: 'Em Uso',      value: emUso,       color: 'var(--warning)'     },
+    { label: 'Manutenção',  value: manutencao,  color: 'var(--destructive)' },
   ]
 
   return (
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title">Estoque</h1>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Status atual de todos os containers</p>
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Status atual de todos os containers</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {stats.map(s => (
           <div key={s.label} className="stat-card" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)', fontWeight: 600, marginTop: '0.25rem' }}>{s.label}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', fontWeight: 600, marginTop: '0.25rem' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -71,9 +71,9 @@ export default function Estoque() {
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '0.375rem' }}>
           {[
-            { value: 'TODOS',     label: 'Todos'      },
+            { value: 'TODOS',      label: 'Todos'      },
             { value: 'DISPONIVEL', label: 'Disponível' },
-            { value: 'EM USO',    label: 'Em Uso'     },
+            { value: 'EM USO',     label: 'Em Uso'     },
           ].map(f => (
             <button key={f.value} onClick={() => setFiltro(f.value)}
               className={filtro === f.value ? 'btn-primary' : 'btn-secondary'}
@@ -86,7 +86,7 @@ export default function Estoque() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -98,17 +98,17 @@ export default function Estoque() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>Nenhum container</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum container</td></tr>
               ) : filtrado.map(c => (
                 <tr key={c.id}>
                   <td><span className="badge badge-muted" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{c.id_container}</span></td>
-                  <td style={{ color: 'hsl(210,20%,60%)' }}>{c.numero_container}</td>
+                  <td style={{ color: 'var(--fg-muted)' }}>{c.numero_container}</td>
                   <td style={{ fontSize: '0.8rem' }}>{c.capacidade}</td>
                   <td><StatusBadge status={c.status_operacional} /></td>
                   <td style={{ fontSize: '0.8rem' }}>{clienteAtual[c.id_container] ?? '—'}</td>
-                  <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,60%)' }}>{c.local_patio || '—'}</td>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.local_patio || '—'}</td>
                   <td>{badgeConservacao(c.estado_conservacao)}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,55%)' }}>{c.pintura_status}</td>
+                  <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{c.pintura_status}</td>
                 </tr>
               ))}
             </tbody>

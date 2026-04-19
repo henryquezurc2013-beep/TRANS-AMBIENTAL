@@ -40,7 +40,7 @@ export default function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1rem',
-      background: 'hsl(222, 41%, 7%)',
+      background: 'var(--bg)',
       backgroundImage: 'radial-gradient(ellipse 80% 40% at 50% -10%, hsl(217 91% 60% / 0.15), transparent)',
     }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
@@ -49,20 +49,14 @@ export default function Login() {
           <img
             src="/logo.svg"
             alt="Trans Ambiental"
-            style={{
-              width: '120px',
-              height: 'auto',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-              marginBottom: '0.75rem',
-            }}
+            style={{ width: '120px', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: '0.75rem' }}
           />
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(210,20%,50%)' }}>Controle de Containers</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--fg-muted)' }}>Controle de Containers</p>
         </div>
 
         {/* Card */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ margin: '0 0 1.5rem', fontSize: '1.125rem', fontWeight: 600, color: 'hsl(210,20%,85%)' }}>Fazer Login</h2>
+          <h2 style={{ margin: '0 0 1.5rem', fontSize: '1.125rem', fontWeight: 600, color: 'hsl(210, 20%, 85%)' }}>Fazer Login</h2>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group">
@@ -95,7 +89,7 @@ export default function Login() {
                   onClick={() => setMostrarSenha(v => !v)}
                   style={{
                     position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(210,20%,50%)', padding: 0, display: 'flex',
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 0, display: 'flex',
                   }}
                 >
                   {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -110,7 +104,7 @@ export default function Login() {
                 borderRadius: '0.5rem',
                 padding: '0.625rem 0.875rem',
                 fontSize: '0.8125rem',
-                color: 'hsl(0,84%,65%)',
+                color: 'var(--destructive)',
               }}>
                 {erro}
               </div>
@@ -122,16 +116,12 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%', justifyContent: 'center', padding: '0.625rem', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? (
-                <span>Entrando...</span>
-              ) : (
-                <><LogIn size={16} /> Entrar</>
-              )}
+              {loading ? <span>Entrando...</span> : <><LogIn size={16} /> Entrar</>}
             </button>
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'hsl(210,20%,35%)' }}>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'hsl(210, 20%, 35%)' }}>
           TRANS AMBIENTAL © {new Date().getFullYear()}
         </p>
       </div>

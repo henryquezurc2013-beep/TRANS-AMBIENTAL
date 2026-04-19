@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'hsl(222, 41%, 7%)',
+      background: 'var(--bg)',
       backgroundImage: 'radial-gradient(ellipse 80% 40% at 50% -10%, hsl(217 91% 60% / 0.15), transparent)',
       display: 'flex',
       flexDirection: 'column',
@@ -21,7 +21,7 @@ export default function Home() {
       {/* Logo */}
       <div style={{
         width: '5rem', height: '5rem',
-        background: 'linear-gradient(135deg, hsl(217,91%,60%), hsl(217,91%,40%))',
+        background: 'linear-gradient(135deg, var(--primary), hsl(217, 91%, 40%))',
         borderRadius: '1.25rem',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         marginBottom: '1.5rem',
@@ -30,13 +30,13 @@ export default function Home() {
         <Recycle size={36} color="white" />
       </div>
 
-      <h1 style={{ margin: '0 0 0.5rem', fontSize: '2.5rem', fontWeight: 800, color: 'hsl(210,20%,96%)' }}>
+      <h1 style={{ margin: '0 0 0.5rem', fontSize: '2.5rem', fontWeight: 800, color: 'var(--fg)' }}>
         TRANS AMBIENTAL
       </h1>
-      <p style={{ margin: '0 0 0.5rem', fontSize: '1.125rem', color: 'hsl(210,20%,60%)' }}>
+      <p style={{ margin: '0 0 0.5rem', fontSize: '1.125rem', color: 'var(--fg-muted)' }}>
         Sistema de Gestão de Containers
       </p>
-      <p style={{ margin: '0 0 2.5rem', fontSize: '0.875rem', color: 'hsl(210,20%,40%)', maxWidth: '480px' }}>
+      <p style={{ margin: '0 0 2.5rem', fontSize: '0.875rem', color: 'hsl(210, 20%, 40%)', maxWidth: '480px' }}>
         Controle completo de entregas, retiradas, trocas e manutenção com rastreabilidade total via logs de auditoria.
       </p>
 
@@ -44,8 +44,8 @@ export default function Home() {
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
           { icon: Package, title: 'Estoque em Tempo Real', desc: 'Acompanhe cada container' },
-          { icon: Shield, title: 'Auditoria Completa', desc: 'Logs de todas as ações' },
-          { icon: MapPin, title: 'Rastreabilidade', desc: 'Histórico detalhado' },
+          { icon: Shield,  title: 'Auditoria Completa',   desc: 'Logs de todas as ações'  },
+          { icon: MapPin,  title: 'Rastreabilidade',      desc: 'Histórico detalhado'      },
         ].map(f => (
           <div key={f.title} className="card" style={{ width: '180px', textAlign: 'center' }}>
             <div style={{
@@ -56,10 +56,10 @@ export default function Home() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 0.75rem',
             }}>
-              <f.icon size={18} color="hsl(217,91%,65%)" />
+              <f.icon size={18} color="var(--primary)" />
             </div>
             <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem' }}>{f.title}</div>
-            <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)' }}>{f.desc}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{f.desc}</div>
           </div>
         ))}
       </div>

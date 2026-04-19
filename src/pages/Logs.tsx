@@ -22,12 +22,12 @@ export default function Logs() {
   }
 
   function corAcao(acao: string) {
-    if (acao.includes('LOGIN') || acao.includes('LOGOUT')) return 'hsl(217,91%,65%)'
-    if (acao.includes('ENTREGA')) return 'hsl(142,71%,55%)'
-    if (acao.includes('RETIRADA') || acao.includes('TROCA')) return 'hsl(38,92%,60%)'
-    if (acao.includes('MANUT')) return 'hsl(38,92%,55%)'
-    if (acao.includes('EDITAR') || acao.includes('CADASTRO')) return 'hsl(210,20%,65%)'
-    return 'hsl(210,20%,55%)'
+    if (acao.includes('LOGIN') || acao.includes('LOGOUT')) return 'var(--primary)'
+    if (acao.includes('ENTREGA')) return 'var(--success)'
+    if (acao.includes('RETIRADA') || acao.includes('TROCA')) return 'var(--warning)'
+    if (acao.includes('MANUT')) return 'var(--warning)'
+    if (acao.includes('EDITAR') || acao.includes('CADASTRO')) return 'var(--fg-muted)'
+    return 'var(--fg-muted)'
   }
 
   return (
@@ -35,13 +35,13 @@ export default function Logs() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <h1 className="page-title">Logs de Auditoria</h1>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Rastreabilidade de todas as ações do sistema</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Rastreabilidade de todas as ações do sistema</p>
         </div>
         <input className="input-field" style={{ maxWidth: '280px' }} placeholder="Filtrar por usuário, ação..." value={busca} onChange={e => setBusca(e.target.value)} />
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -50,19 +50,19 @@ export default function Logs() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>Nenhum log</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum log</td></tr>
               ) : filtrado.map(l => (
                 <tr key={l.id}>
-                  <td style={{ fontSize: '0.775rem', fontFamily: 'JetBrains Mono, monospace', color: 'hsl(210,20%,50%)', whiteSpace: 'nowrap' }}>
+                  <td style={{ fontSize: '0.775rem', fontFamily: 'JetBrains Mono, monospace', color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>
                     {fmtDataHora(l.data_hora)}
                   </td>
                   <td>
-                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'hsl(217,91%,65%)' }}>{l.usuario}</span>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--primary)' }}>{l.usuario}</span>
                   </td>
                   <td>
                     <span style={{ fontSize: '0.8rem', fontWeight: 600, color: corAcao(l.acao), fontFamily: 'JetBrains Mono, monospace' }}>{l.acao}</span>
                   </td>
-                  <td style={{ fontSize: '0.8125rem', color: 'hsl(210,20%,65%)' }}>{l.detalhes}</td>
+                  <td style={{ fontSize: '0.8125rem', color: 'var(--fg-muted)' }}>{l.detalhes}</td>
                 </tr>
               ))}
             </tbody>
@@ -70,7 +70,7 @@ export default function Logs() {
         </div>
       )}
 
-      <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'hsl(210,20%,40%)' }}>
+      <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
         {filtrado.length} registro(s) — últimos 500
       </div>
     </div>

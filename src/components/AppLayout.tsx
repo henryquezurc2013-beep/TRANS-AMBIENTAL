@@ -19,15 +19,15 @@ const MENU_ITEMS = [
   { path: '/troca-container',       label: 'Troca',           icon: ArrowLeftRight,   perm: 'Troca_Container' },
   { path: '/manutencao',            label: 'Manutenção',      icon: Wrench,           perm: 'Manutencao' },
   { path: '/lancamento-manutencao', label: 'Lançar Manut.',   icon: Wrench,           perm: 'Lancamento_Manutencao' },
-{ path: '/relatorios',            label: 'Relatórios',      icon: FileText,         perm: 'Relatorios' },
+  { path: '/relatorios',            label: 'Relatórios',      icon: FileText,         perm: 'Relatorios' },
   { path: '/logs',                  label: 'Logs',            icon: ScrollText,       perm: 'Logs' },
 ]
 
 const sidebarStyle: React.CSSProperties = {
   width: '16rem',
   height: '100vh',
-  background: 'hsl(222, 44%, 9%)',
-  borderRight: '1px solid hsl(220, 25%, 16%)',
+  background: 'var(--sidebar)',
+  borderRight: '1px solid var(--border-subtle)',
   display: 'flex',
   flexDirection: 'column',
   top: 0,
@@ -47,22 +47,26 @@ function Sidebar({ itensVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLog
   return (
     <div style={sidebarStyle}>
       {/* Logo */}
-      <div style={{ padding: '1rem 0', borderBottom: '1px solid hsl(220, 25%, 16%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{
+        padding: '1rem 0',
+        borderBottom: '1px solid var(--border-subtle)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
         <img
           src="/logo.svg"
           alt="Trans Ambiental"
           style={{
-            width: '120px',
-            height: 'auto',
-            objectFit: 'contain',
+            width: '120px', height: 'auto', objectFit: 'contain',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-            transition: 'transform 0.6s ease',
-            cursor: 'pointer',
+            transition: 'transform 0.6s ease', cursor: 'pointer',
           }}
           onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(5deg) scale(1.05)')}
           onMouseLeave={e => (e.currentTarget.style.transform = 'rotate(0deg) scale(1)')}
         />
-        <div style={{ fontSize: '0.65rem', color: 'hsl(210,20%,50%)', letterSpacing: '0.05em', marginTop: '0.375rem' }}>Controle de Containers</div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', letterSpacing: '0.05em', marginTop: '0.375rem' }}>
+          Controle de Containers
+        </div>
       </div>
 
       {/* Menu */}
@@ -84,19 +88,11 @@ function Sidebar({ itensVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLog
       </nav>
 
       {/* Rodapé */}
-      <div style={{ padding: '1rem', borderTop: '1px solid hsl(220, 25%, 16%)' }}>
+      <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
         <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(210,20%,85%)' }}>{usuarioAtual}</div>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(210, 20%, 85%)' }}>{usuarioAtual}</div>
           <div style={{ marginTop: '0.25rem' }}>
-            <span style={{
-              background: 'hsl(217 91% 60% / 0.12)',
-              color: 'hsl(217,91%,70%)',
-              border: '1px solid hsl(217 91% 60% / 0.25)',
-              padding: '0.1rem 0.5rem',
-              borderRadius: '9999px',
-              fontSize: '0.65rem',
-              fontWeight: 600,
-            }}>{nivelAtual}</span>
+            <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{nivelAtual}</span>
           </div>
         </div>
         <button onClick={onLogout} className="btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
@@ -166,8 +162,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0.75rem 1rem',
-          background: 'hsl(222, 44%, 9%)',
-          borderBottom: '1px solid hsl(220, 25%, 16%)',
+          background: 'var(--sidebar)',
+          borderBottom: '1px solid var(--border-subtle)',
           position: 'sticky',
           top: 0,
           zIndex: 50,

@@ -160,7 +160,7 @@ export default function Clientes() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <h1 className="page-title">Clientes</h1>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Cadastro de clientes da empresa</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Cadastro de clientes da empresa</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <input className="input-field" style={{ maxWidth: '220px' }} placeholder="Buscar cliente..." value={busca} onChange={e => setBusca(e.target.value)} />
@@ -169,7 +169,7 @@ export default function Clientes() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -178,7 +178,7 @@ export default function Clientes() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>Nenhum cliente</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum cliente</td></tr>
               ) : filtrado.map(c => (
                 <tr key={c.id}>
                   {editandoId === c.id ? (
@@ -198,10 +198,10 @@ export default function Clientes() {
                               style={{ minWidth: '100px', paddingRight: editBuscandoCep ? '2rem' : undefined }}
                             />
                             {editBuscandoCep && (
-                              <Loader2 size={13} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(217,91%,60%)', animation: 'spin 1s linear infinite' }} />
+                              <Loader2 size={13} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
                             )}
                           </div>
-                          {editErroCep && <span style={{ fontSize: '0.7rem', color: 'hsl(0,84%,60%)' }}>{editErroCep}</span>}
+                          {editErroCep && <span style={{ fontSize: '0.7rem', color: 'var(--destructive)' }}>{editErroCep}</span>}
                           <input className="input-field" style={{ minWidth: '100px' }} placeholder="Endereço" value={editForm.endereco ?? ''} onChange={e => setEditForm(f => ({ ...f, endereco: e.target.value }))} />
                         </div>
                       </td>
@@ -219,9 +219,9 @@ export default function Clientes() {
                       <td style={{ fontWeight: 600 }}>{c.nome_cliente}</td>
                       <td style={{ fontSize: '0.8rem' }}>{c.contato || '—'}</td>
                       <td style={{ fontSize: '0.8rem', fontFamily: 'JetBrains Mono, monospace' }}>{c.telefone || '—'}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,60%)' }}>{c.endereco || '—'}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.endereco || '—'}</td>
                       <td style={{ fontSize: '0.8rem' }}>{c.bairro_cidade || '—'}</td>
-                      <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)' }}>{c.observacao || '—'}</td>
+                      <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{c.observacao || '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
                           <button
@@ -297,14 +297,14 @@ export default function Clientes() {
                         style={{
                           position: 'absolute', right: '0.625rem', top: '50%',
                           transform: 'translateY(-50%)',
-                          color: 'hsl(217,91%,60%)',
+                          color: 'var(--primary)',
                           animation: 'spin 1s linear infinite',
                         }}
                       />
                     )}
                   </div>
                   {erroCep && (
-                    <span style={{ fontSize: '0.75rem', color: 'hsl(0,84%,60%)', marginTop: '0.25rem', display: 'block' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--destructive)', marginTop: '0.25rem', display: 'block' }}>
                       {erroCep}
                     </span>
                   )}
@@ -345,13 +345,13 @@ export default function Clientes() {
                 borderRadius: '0.625rem',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <AlertTriangle size={18} color="hsl(0,84%,60%)" />
+                <AlertTriangle size={18} color="var(--destructive)" />
               </div>
               <div>
                 <h2 style={{ margin: '0 0 0.375rem', fontSize: '1rem', fontWeight: 600 }}>Excluir cliente</h2>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(210,20%,60%)', lineHeight: 1.5 }}>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--fg-muted)', lineHeight: 1.5 }}>
                   Tem certeza que deseja excluir o cliente{' '}
-                  <strong style={{ color: 'hsl(210,20%,90%)' }}>{clienteParaExcluir.nome_cliente}</strong>?
+                  <strong style={{ color: 'var(--fg)' }}>{clienteParaExcluir.nome_cliente}</strong>?
                   {' '}Esta ação não pode ser desfeita.
                 </p>
               </div>
@@ -367,7 +367,7 @@ export default function Clientes() {
               <button
                 className="btn-destructive"
                 disabled={excluindo}
-                style={{ background: 'hsl(0,84%,60%)', color: 'white', border: 'none' }}
+                style={{ background: 'var(--destructive)', color: 'white', border: 'none' }}
                 onClick={handleExcluir}
               >
                 {excluindo ? 'Excluindo...' : <><Trash2 size={14} /> Excluir</>}

@@ -1,5 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { PlusCircle, CheckCircle, Package, Users, Truck } from 'lucide-react'
+import { PlusCircle, CheckCircle, Package, Truck } from 'lucide-react'
 import { db, Container, Cliente, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
@@ -36,14 +36,12 @@ export default function CadastroRapido() {
     setClientes(cl)
   }
 
-  // Containers disponíveis (sem manutenção)
   const disponiveis = containers.filter(c =>
     c.status_operacional === 'DISPONIVEL' &&
     c.liberado_para_entrega === 'SIM' &&
     c.status_cadastro === 'ATIVO'
   )
 
-  // Containers em uso (sem manutenção)
   const emUso = containers.filter(c => c.status_operacional === 'EM USO')
 
   async function handleEntrega(e: FormEvent) {
@@ -57,7 +55,6 @@ export default function CadastroRapido() {
       const container = containers.find(c => c.id_container === idContainer)!
       const cliente = clientes.find(cl => cl.nome_cliente === clienteNome)!
 
-      // Registra entrega no controle
       await db.controle.add({
         data_lancamento: hoje(),
         id_container: idContainer,
@@ -73,7 +70,6 @@ export default function CadastroRapido() {
         origem_acao: 'LANCADO POR APP',
       })
 
-      // Atualiza container para EM USO
       await db.containers.updateByIdContainer(idContainer, {
         status_operacional: 'EM USO',
         liberado_para_entrega: 'NAO',
@@ -82,7 +78,6 @@ export default function CadastroRapido() {
       await registrarLog(sessao!.usuarioAtual, 'ENTREGA', `Container ${idContainer} entregue para ${clienteNome}`)
       toast(`Container ${idContainer} entregue para ${clienteNome}!`, 'success')
 
-      // Limpa form
       setIdContainer('')
       setClienteNome('')
       setMaterial('')
@@ -104,15 +99,12 @@ export default function CadastroRapido() {
     }
     setLoading(true)
     try {
-      // Busca registro aberto desse container
       const abertos = await db.controle.getEmAberto()
       const registro = abertos.find(r => r.id_container === idRetirar)
       if (!registro) throw new Error('Registro de entrega não encontrado')
 
-      // Fecha a entrega
       await db.controle.update(registro.id, { data_retirada: dataRetirada })
 
-      // Libera container
       await db.containers.updateByIdContainer(idRetirar, {
         status_operacional: 'DISPONIVEL',
         liberado_para_entrega: 'SIM',
@@ -133,7 +125,7 @@ export default function CadastroRapido() {
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title">Cadastro Rápido</h1>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Lance entregas e retiradas de containers</p>
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Lance entregas e retiradas de containers</p>
       </div>
 
       {/* Abas */}
@@ -149,7 +141,7 @@ export default function CadastroRapido() {
       {aba === 'entrega' ? (
         <div className="card" style={{ maxWidth: '600px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <PlusCircle size={18} color="hsl(217,91%,60%)" />
+            <PlusCircle size={18} color="var(--primary)" />
             <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Nova Entrega</h2>
             <span className="badge badge-info" style={{ marginLeft: 'auto' }}>{disponiveis.length} disponíveis</span>
           </div>
@@ -161,9 +153,7 @@ export default function CadastroRapido() {
                 <select className="select-field" value={idContainer} onChange={e => setIdContainer(e.target.value)} required>
                   <option value="">Selecionar...</option>
                   {disponiveis.map(c => (
-                    <option key={c.id} value={c.id_container}>
-                      {c.id_container} — {c.capacidade}
-                    </option>
+                    <option key={c.id} value={c.id_container}>{c.id_container} — {c.capacidade}</option>
                   ))}
                 </select>
               </div>
@@ -223,7 +213,7 @@ export default function CadastroRapido() {
       ) : (
         <div className="card" style={{ maxWidth: '480px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <Package size={18} color="hsl(142,71%,45%)" />
+            <Package size={18} color="var(--success)" />
             <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Retirar Container</h2>
             <span className="badge badge-warning" style={{ marginLeft: 'auto' }}>{emUso.length} em uso</span>
           </div>
@@ -244,7 +234,8 @@ export default function CadastroRapido() {
               <input className="input-field" type="date" value={dataRetirada} onChange={e => setDataRetirada(e.target.value)} required />
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', background: 'hsl(142,71%,45%)', marginTop: '0.25rem' }}>
+            <button type="submit" className="btn-success" disabled={loading}
+              style={{ alignSelf: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 600, marginTop: '0.25rem' }}>
               {loading ? 'Salvando...' : <><CheckCircle size={15} /> Confirmar Retirada</>}
             </button>
           </form>

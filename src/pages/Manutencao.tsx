@@ -4,12 +4,10 @@ import { db, Manutencao as IManutencao, registrarLog } from '../services/dataSer
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
-// ─── Fluxo de status ──────────────────────────────────────────────────────────
-
 const FLUXO: Record<string, string> = {
-  PENDENTE:     'EM ANDAMENTO',
+  PENDENTE:       'EM ANDAMENTO',
   'EM ANDAMENTO': 'CONCLUIDA',
-  CONCLUIDA:    'LIBERADO',
+  CONCLUIDA:      'LIBERADO',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -19,19 +17,8 @@ const STATUS_LABEL: Record<string, string> = {
   LIBERADO:       'Disponível',
 }
 
-// ─── Histórico (armazenado em JSON dentro do campo observacao) ────────────────
-
-interface HistoriaItem {
-  de:   string
-  para: string
-  data: string   // ISO string
-  nota: string
-}
-
-interface ObsData {
-  obs:      string
-  historia: HistoriaItem[]
-}
+interface HistoriaItem { de: string; para: string; data: string; nota: string }
+interface ObsData      { obs: string; historia: HistoriaItem[] }
 
 function parseObs(raw: string): ObsData {
   try {
@@ -41,11 +28,7 @@ function parseObs(raw: string): ObsData {
   return { obs: raw ?? '', historia: [] }
 }
 
-function serializeObs(d: ObsData): string {
-  return JSON.stringify(d)
-}
-
-// ─── Badge helpers ────────────────────────────────────────────────────────────
+function serializeObs(d: ObsData): string { return JSON.stringify(d) }
 
 function badgePrioridade(p: string) {
   if (p === 'URGENTE') return <span className="badge badge-destructive">URGENTE</span>
@@ -63,22 +46,18 @@ function badgeStatus(s: string) {
 }
 
 function corStatus(s: string): string {
-  if (s === 'PENDENTE')       return 'hsl(210,20%,50%)'
-  if (s === 'EM ANDAMENTO')   return 'hsl(38,92%,55%)'
-  if (s === 'CONCLUIDA')      return 'hsl(142,71%,45%)'
-  if (s === 'LIBERADO')       return 'hsl(217,91%,60%)'
-  return 'hsl(210,20%,50%)'
+  if (s === 'PENDENTE')       return 'var(--fg-muted)'
+  if (s === 'EM ANDAMENTO')   return 'var(--warning)'
+  if (s === 'CONCLUIDA')      return 'var(--success)'
+  if (s === 'LIBERADO')       return 'var(--primary)'
+  return 'var(--fg-muted)'
 }
-
-// ─── Filtros ──────────────────────────────────────────────────────────────────
 
 const FILTROS = ['TODOS', 'PENDENTE', 'EM ANDAMENTO', 'CONCLUIDA', 'LIBERADO'] as const
 const LABEL_FILTRO: Record<string, string> = {
   TODOS: 'Todos', PENDENTE: 'Aguardando', 'EM ANDAMENTO': 'Em Manutenção',
   CONCLUIDA: 'Concluídas', LIBERADO: 'Disponíveis',
 }
-
-// ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function Manutencao() {
   const { sessao } = useAuth()
@@ -102,7 +81,6 @@ export default function Manutencao() {
   function abrirEdicao(r: IManutencao) {
     setEditando(r)
     setNota('')
-    // data/hora local formatada para datetime-local input
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     setDataHora(
@@ -121,41 +99,30 @@ export default function Manutencao() {
     if (!proximoStatus) return
     setSalvando(true)
     try {
-      const obsAtual   = parseObs(editando.observacao ?? '')
+      const obsAtual = parseObs(editando.observacao ?? '')
       const novoItem: HistoriaItem = {
         de:   editando.status_manutencao,
         para: proximoStatus,
         data: new Date(dataHora).toISOString(),
         nota: nota.trim(),
       }
-      const novaObsData: ObsData = {
-        obs:      obsAtual.obs,
-        historia: [...obsAtual.historia, novoItem],
-      }
+      const novaObsData: ObsData = { obs: obsAtual.obs, historia: [...obsAtual.historia, novoItem] }
 
       await db.manutencao.update(editando.id, {
         status_manutencao: proximoStatus,
         observacao:        serializeObs(novaObsData),
       })
 
-      // Se liberando, atualiza o container no estoque
       if (proximoStatus === 'LIBERADO') {
         await db.containers.updateByIdContainer(editando.id_container, {
           status_operacional:    'DISPONIVEL',
           liberado_para_entrega: 'SIM',
         })
-        await registrarLog(
-          sessao!.usuarioAtual,
-          'LIBERACAO CONTAINER',
-          `Container ${editando.id_container} liberado — retornou ao pátio`,
-        )
+        await registrarLog(sessao!.usuarioAtual, 'LIBERACAO CONTAINER', `Container ${editando.id_container} liberado — retornou ao pátio`)
         toast(`Container ${editando.id_container} disponível no pátio!`, 'success')
       } else {
-        await registrarLog(
-          sessao!.usuarioAtual,
-          'STATUS MANUTENCAO',
-          `Container ${editando.id_container}: ${STATUS_LABEL[editando.status_manutencao]} → ${STATUS_LABEL[proximoStatus]}`,
-        )
+        await registrarLog(sessao!.usuarioAtual, 'STATUS MANUTENCAO',
+          `Container ${editando.id_container}: ${STATUS_LABEL[editando.status_manutencao]} → ${STATUS_LABEL[proximoStatus]}`)
         toast(`Status atualizado: ${STATUS_LABEL[proximoStatus]}`, 'success')
       }
 
@@ -171,9 +138,11 @@ export default function Manutencao() {
   const filtrado  = filtro === 'TODOS' ? registros : registros.filter(r => r.status_manutencao === filtro)
   const pendentes = registros.filter(r => r.status_manutencao === 'PENDENTE').length
 
-  // ── Dados do modal ─────────────────────────────────────────────────────────
   const proximoStatus = editando ? FLUXO[editando.status_manutencao] : null
   const obsData       = editando ? parseObs(editando.observacao ?? '') : null
+
+  const innerBg     = 'hsl(220, 25%, 10%)'
+  const innerBorder = 'hsl(220, 25%, 18%)'
 
   return (
     <div className="page-container">
@@ -185,7 +154,7 @@ export default function Manutencao() {
             <h1 className="page-title" style={{ margin: 0 }}>Manutenção</h1>
             {pendentes > 0 && <span className="badge badge-destructive">{pendentes} aguardando</span>}
           </div>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Histórico de manutenções</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Histórico de manutenções</p>
         </div>
         <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
           {FILTROS.map(f => (
@@ -200,7 +169,7 @@ export default function Manutencao() {
 
       {/* Tabela */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -209,7 +178,7 @@ export default function Manutencao() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>Nenhum registro</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum registro</td></tr>
               ) : filtrado.map(r => (
                 <tr key={r.id}>
                   <td style={{ fontSize: '0.8rem', fontFamily: 'JetBrains Mono, monospace' }}>{r.data_lancamento.split('-').reverse().join('/')}</td>
@@ -223,12 +192,9 @@ export default function Manutencao() {
                   </td>
                   <td>
                     {FLUXO[r.status_manutencao] && (
-                      <button
-                        className="btn-ghost"
-                        style={{ padding: '0.25rem 0.5rem' }}
+                      <button className="btn-ghost" style={{ padding: '0.25rem 0.5rem' }}
                         title={`Avançar para: ${STATUS_LABEL[FLUXO[r.status_manutencao]]}`}
-                        onClick={() => abrirEdicao(r)}
-                      >
+                        onClick={() => abrirEdicao(r)}>
                         <Pencil size={13} />
                       </button>
                     )}
@@ -245,7 +211,6 @@ export default function Manutencao() {
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) fecharModal() }}>
           <div className="modal-content" style={{ maxWidth: '500px' }}>
 
-            {/* Título */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Atualizar Manutenção</h2>
               <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={fecharModal} disabled={salvando}><X size={18} /></button>
@@ -253,84 +218,65 @@ export default function Manutencao() {
 
             {/* Info do container */}
             <div style={{
-              background: 'hsl(220,25%,11%)',
-              border: '1px solid hsl(220,25%,18%)',
-              borderRadius: '0.5rem',
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.4rem 1rem',
-              fontSize: '0.825rem',
+              background: innerBg, border: `1px solid ${innerBorder}`, borderRadius: '0.5rem',
+              padding: '0.75rem 1rem', marginBottom: '1rem',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 1rem', fontSize: '0.825rem',
             }}>
               <div>
-                <span style={{ color: 'hsl(210,20%,45%)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Container</span>
-                <div><strong>{editando.id_container}</strong> <span style={{ color: 'hsl(210,20%,55%)' }}>({editando.tipo_container})</span></div>
+                <span style={{ color: 'var(--fg-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Container</span>
+                <div><strong>{editando.id_container}</strong> <span style={{ color: 'var(--fg-muted)' }}>({editando.tipo_container})</span></div>
               </div>
               <div>
-                <span style={{ color: 'hsl(210,20%,45%)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Responsável</span>
+                <span style={{ color: 'var(--fg-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Responsável</span>
                 <div>{editando.responsavel || '—'}</div>
               </div>
               {editando.descricao && (
-                <div style={{ gridColumn: '1 / -1', paddingTop: '0.375rem', borderTop: '1px solid hsl(220,25%,18%)' }}>
-                  <span style={{ color: 'hsl(210,20%,45%)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Descrição</span>
-                  <div style={{ color: 'hsl(210,20%,75%)' }}>{editando.descricao}</div>
+                <div style={{ gridColumn: '1 / -1', paddingTop: '0.375rem', borderTop: `1px solid ${innerBorder}` }}>
+                  <span style={{ color: 'var(--fg-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Descrição</span>
+                  <div style={{ color: 'hsl(210, 20%, 78%)' }}>{editando.descricao}</div>
                 </div>
               )}
             </div>
 
             {/* Transição de status */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.75rem 1rem',
-              background: 'hsl(220,25%,11%)',
-              border: '1px solid hsl(220,25%,18%)',
-              borderRadius: '0.5rem',
-              marginBottom: '1rem',
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.75rem 1rem', background: innerBg, border: `1px solid ${innerBorder}`,
+              borderRadius: '0.5rem', marginBottom: '1rem',
             }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.65rem', color: 'hsl(210,20%,45%)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Status atual</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Status atual</div>
                 <span style={{
                   padding: '0.2rem 0.75rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 600,
-                  background: `${corStatus(editando.status_manutencao)}20`,
+                  background: `color-mix(in srgb, ${corStatus(editando.status_manutencao)} 15%, transparent)`,
                   color: corStatus(editando.status_manutencao),
-                  border: `1px solid ${corStatus(editando.status_manutencao)}50`,
+                  border: `1px solid color-mix(in srgb, ${corStatus(editando.status_manutencao)} 35%, transparent)`,
                 }}>
                   {STATUS_LABEL[editando.status_manutencao]}
                 </span>
               </div>
-              <ArrowRight size={18} style={{ color: 'hsl(210,20%,35%)', flexShrink: 0 }} />
+              <ArrowRight size={18} style={{ color: 'var(--fg-muted)', flexShrink: 0 }} />
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.65rem', color: 'hsl(210,20%,45%)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Próximo status</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>Próximo status</div>
                 <span style={{
                   padding: '0.2rem 0.75rem', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 600,
-                  background: `${corStatus(proximoStatus)}20`,
+                  background: `color-mix(in srgb, ${corStatus(proximoStatus)} 15%, transparent)`,
                   color: corStatus(proximoStatus),
-                  border: `1px solid ${corStatus(proximoStatus)}50`,
+                  border: `1px solid color-mix(in srgb, ${corStatus(proximoStatus)} 35%, transparent)`,
                 }}>
                   {STATUS_LABEL[proximoStatus]}
                 </span>
               </div>
             </div>
 
-            {/* Data/hora da mudança */}
             <div className="form-group" style={{ marginBottom: '0.875rem' }}>
               <label className="form-label">Data e hora da mudança</label>
-              <input
-                type="datetime-local"
-                className="input-field"
-                value={dataHora}
-                onChange={e => setDataHora(e.target.value)}
-                disabled={salvando}
-              />
+              <input type="datetime-local" className="input-field" value={dataHora} onChange={e => setDataHora(e.target.value)} disabled={salvando} />
             </div>
 
-            {/* Observação */}
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">
-                Observações <span style={{ color: 'hsl(210,20%,40%)', fontWeight: 400 }}>(opcional)</span>
+                Observações <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>(opcional)</span>
               </label>
               <input
                 className="input-field"
@@ -345,38 +291,31 @@ export default function Manutencao() {
               />
             </div>
 
-            {/* Histórico de mudanças */}
+            {/* Histórico */}
             {obsData && obsData.historia.length > 0 && (
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,45%)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.5rem' }}>
                   Histórico
                 </div>
-                <div style={{
-                  background: 'hsl(220,25%,10%)',
-                  border: '1px solid hsl(220,25%,17%)',
-                  borderRadius: '0.5rem',
-                  overflow: 'hidden',
-                }}>
+                <div style={{ background: innerBg, border: `1px solid ${innerBorder}`, borderRadius: '0.5rem', overflow: 'hidden' }}>
                   {obsData.historia.map((h, i) => (
                     <div key={i} style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.625rem',
+                      display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
                       padding: '0.5rem 0.75rem',
-                      borderBottom: i < obsData.historia.length - 1 ? '1px solid hsl(220,25%,17%)' : 'none',
+                      borderBottom: i < obsData.historia.length - 1 ? `1px solid ${innerBorder}` : 'none',
                       fontSize: '0.8rem',
                     }}>
-                      <Clock size={12} style={{ color: 'hsl(210,20%,40%)', flexShrink: 0, marginTop: '0.15rem' }} />
+                      <Clock size={12} style={{ color: 'var(--fg-muted)', flexShrink: 0, marginTop: '0.15rem' }} />
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: h.nota ? '0.15rem' : 0 }}>
                           <span style={{ color: corStatus(h.de), fontWeight: 600 }}>{STATUS_LABEL[h.de] ?? h.de}</span>
-                          <ArrowRight size={11} style={{ color: 'hsl(210,20%,35%)' }} />
+                          <ArrowRight size={11} style={{ color: 'var(--fg-muted)' }} />
                           <span style={{ color: corStatus(h.para), fontWeight: 600 }}>{STATUS_LABEL[h.para] ?? h.para}</span>
-                          <span style={{ marginLeft: 'auto', color: 'hsl(210,20%,40%)', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
+                          <span style={{ marginLeft: 'auto', color: 'var(--fg-muted)', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>
                             {new Date(h.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        {h.nota && <div style={{ color: 'hsl(210,20%,55%)', fontSize: '0.75rem' }}>{h.nota}</div>}
+                        {h.nota && <div style={{ color: 'var(--fg-muted)', fontSize: '0.75rem' }}>{h.nota}</div>}
                       </div>
                     </div>
                   ))}
@@ -385,7 +324,7 @@ export default function Manutencao() {
             )}
 
             {proximoStatus === 'LIBERADO' && (
-              <p style={{ fontSize: '0.78rem', color: 'hsl(217,91%,65%)', marginBottom: '1rem', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--primary)', marginBottom: '1rem', lineHeight: 1.5 }}>
                 O container será marcado como <strong>Disponível</strong> e voltará ao pátio para novas alocações.
               </p>
             )}

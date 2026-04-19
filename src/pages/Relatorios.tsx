@@ -4,8 +4,8 @@ import { Warehouse, Truck, Wrench } from 'lucide-react'
 import { db, Container, Controle, Manutencao, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 
-const CORES_CONSERVACAO = ['hsl(142,71%,45%)', 'hsl(38,92%,50%)', 'hsl(0,84%,60%)']
-const CORES_PINTURA     = ['hsl(217,91%,60%)', 'hsl(210,20%,45%)']
+const CORES_CONSERVACAO = ['var(--success)', 'var(--warning)', 'var(--destructive)']
+const CORES_PINTURA     = ['var(--primary)',  'var(--fg-muted)']
 
 type FiltroStatus = 'TODOS' | 'DISPONIVEL' | 'EM USO' | 'MANUTENCAO'
 
@@ -34,30 +34,20 @@ export default function Relatorios() {
     registrarLog(sessao!.usuarioAtual, 'RELATORIO VISUALIZADO', 'Relatório de containers acessado')
   }, [])
 
-  // ── Localização atual ──────────────────────────────────────────────────────
-
   function localizacaoAtual(c: Container): { texto: string; cor: string } {
     if (c.status_operacional === 'EM USO') {
       const reg = controles.find(r => r.id_container === c.id_container)
-      const cliente = reg ? reg.cliente : '—'
-      return { texto: `No cliente: ${cliente}`, cor: 'hsl(217,91%,65%)' }
+      return { texto: `No cliente: ${reg ? reg.cliente : '—'}`, cor: 'hsl(217, 91%, 65%)' }
     }
     if (c.status_operacional === 'MANUTENCAO') {
       const reg = manutencoes
         .filter(m => m.id_container === c.id_container && m.status_manutencao === 'PENDENTE')
         .sort((a, b) => b.data_lancamento.localeCompare(a.data_lancamento))[0]
       const desc = reg ? reg.descricao : '—'
-      const resumo = desc.length > 35 ? desc.slice(0, 35) + '…' : desc
-      return { texto: `Manutenção: ${resumo}`, cor: 'hsl(38,92%,60%)' }
+      return { texto: `Manutenção: ${desc.length > 35 ? desc.slice(0, 35) + '…' : desc}`, cor: 'hsl(38, 92%, 60%)' }
     }
-    // DISPONIVEL
-    return {
-      texto: c.local_patio ? `Pátio: ${c.local_patio}` : 'No Pátio',
-      cor: 'hsl(142,71%,55%)',
-    }
+    return { texto: c.local_patio ? `Pátio: ${c.local_patio}` : 'No Pátio', cor: 'hsl(142, 71%, 55%)' }
   }
-
-  // ── Dados para gráficos ────────────────────────────────────────────────────
 
   const contagemConservacao: Record<string, number> = {}
   const contagemPintura: Record<string, number>     = {}
@@ -68,13 +58,9 @@ export default function Relatorios() {
   const dadosConservacao = Object.entries(contagemConservacao).map(([name, value]) => ({ name, value }))
   const dadosPintura     = Object.entries(contagemPintura).map(([name, value])     => ({ name, value }))
 
-  // ── Resumo ─────────────────────────────────────────────────────────────────
-
-  const qtdPatio     = containers.filter(c => c.status_operacional === 'DISPONIVEL').length
-  const qtdClientes  = containers.filter(c => c.status_operacional === 'EM USO').length
+  const qtdPatio      = containers.filter(c => c.status_operacional === 'DISPONIVEL').length
+  const qtdClientes   = containers.filter(c => c.status_operacional === 'EM USO').length
   const qtdManutencao = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
-
-  // ── Filtro + busca ─────────────────────────────────────────────────────────
 
   const filtrado = containers
     .filter(c => filtro === 'TODOS' || c.status_operacional === filtro)
@@ -85,14 +71,14 @@ export default function Relatorios() {
     )
 
   const tooltipStyle = {
-    contentStyle: { background: 'hsl(222,37%,12%)', border: '1px solid hsl(220,25%,22%)', borderRadius: '0.5rem', fontSize: '0.8125rem' },
-    labelStyle: { color: 'hsl(210,20%,85%)' },
+    contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontSize: '0.8125rem' },
+    labelStyle: { color: 'hsl(210, 20%, 85%)' },
   }
 
   const FILTROS: { key: FiltroStatus; label: string }[] = [
-    { key: 'TODOS',     label: 'Todos' },
-    { key: 'DISPONIVEL', label: 'No Pátio' },
-    { key: 'EM USO',    label: 'Com Clientes' },
+    { key: 'TODOS',      label: 'Todos'         },
+    { key: 'DISPONIVEL', label: 'No Pátio'      },
+    { key: 'EM USO',     label: 'Com Clientes'  },
     { key: 'MANUTENCAO', label: 'Em Manutenção' },
   ]
 
@@ -100,25 +86,25 @@ export default function Relatorios() {
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title">Relatórios</h1>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Análise visual da frota</p>
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Análise visual da frota</p>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <>
           {/* Cards de resumo */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             {[
-              { label: 'No Pátio',       value: qtdPatio,      icon: Warehouse, cor: 'hsl(142,71%,45%)' },
-              { label: 'Com Clientes',   value: qtdClientes,   icon: Truck,     cor: 'hsl(217,91%,60%)' },
-              { label: 'Em Manutenção',  value: qtdManutencao, icon: Wrench,    cor: 'hsl(38,92%,50%)'  },
+              { label: 'No Pátio',      value: qtdPatio,      icon: Warehouse, cor: 'var(--success)' },
+              { label: 'Com Clientes',  value: qtdClientes,   icon: Truck,     cor: 'var(--primary)' },
+              { label: 'Em Manutenção', value: qtdManutencao, icon: Wrench,    cor: 'var(--warning)'  },
             ].map(s => (
               <div key={s.label} className="stat-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
                   width: '2.5rem', height: '2.5rem', flexShrink: 0,
-                  background: `${s.cor}18`,
-                  border: `1px solid ${s.cor}35`,
+                  background: `color-mix(in srgb, ${s.cor} 12%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${s.cor} 25%, transparent)`,
                   borderRadius: '0.625rem',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
@@ -126,7 +112,7 @@ export default function Relatorios() {
                 </div>
                 <div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 800, color: s.cor, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)', marginTop: '0.125rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', marginTop: '0.125rem' }}>{s.label}</div>
                 </div>
               </div>
             ))}
@@ -166,46 +152,31 @@ export default function Relatorios() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600 }}>Detalhamento da Frota</h3>
-                {/* Filtros */}
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
                   {FILTROS.map(f => (
-                    <button
-                      key={f.key}
-                      onClick={() => setFiltro(f.key)}
+                    <button key={f.key} onClick={() => setFiltro(f.key)}
                       className={filtro === f.key ? 'btn-primary' : 'btn-secondary'}
-                      style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-                    >
+                      style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>
                       {f.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <input
-                className="input-field"
-                style={{ maxWidth: '200px' }}
-                placeholder="Buscar..."
-                value={busca}
-                onChange={e => setBusca(e.target.value)}
-              />
+              <input className="input-field" style={{ maxWidth: '200px' }} placeholder="Buscar..." value={busca} onChange={e => setBusca(e.target.value)} />
             </div>
 
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Nº</th>
-                    <th>Capacidade</th>
-                    <th>Status</th>
-                    <th>Localização Atual</th>
-                    <th>Conservação</th>
-                    <th>Pintura</th>
-                    <th>Cadastro</th>
+                    <th>Nº</th><th>Capacidade</th><th>Status</th>
+                    <th>Localização Atual</th><th>Conservação</th><th>Pintura</th><th>Cadastro</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtrado.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>
                         Nenhum container encontrado
                       </td>
                     </tr>
@@ -225,12 +196,10 @@ export default function Relatorios() {
                              c.status_operacional === 'EM USO'     ? 'Em Uso'     : 'Manutenção'}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.8rem', color: loc.cor, fontWeight: 500 }}>
-                          {loc.texto}
-                        </td>
+                        <td style={{ fontSize: '0.8rem', color: loc.cor, fontWeight: 500 }}>{loc.texto}</td>
                         <td style={{ fontSize: '0.8rem' }}>{c.estado_conservacao}</td>
-                        <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,55%)' }}>{c.pintura_status}</td>
-                        <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,45%)' }}>
+                        <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{c.pintura_status}</td>
+                        <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
                           {c.data_cadastro.split('-').reverse().join('/')}
                         </td>
                       </tr>
@@ -240,7 +209,7 @@ export default function Relatorios() {
               </table>
             </div>
 
-            <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'hsl(210,20%,40%)' }}>
+            <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
               {filtrado.length} container(s) exibido(s)
             </div>
           </div>

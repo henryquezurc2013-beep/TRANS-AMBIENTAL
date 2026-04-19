@@ -108,12 +108,12 @@ export default function TrocaContainer() {
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title">Troca de Container</h1>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Substitua um container em uso por outro disponível</p>
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Substitua um container em uso por outro disponível</p>
       </div>
 
       <div className="card" style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <ArrowLeftRight size={18} color="hsl(217,91%,60%)" />
+          <ArrowLeftRight size={18} color="var(--primary)" />
           <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Dados da Troca</h2>
         </div>
 
@@ -127,7 +127,7 @@ export default function TrocaContainer() {
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '0.125rem' }}>
-              <ArrowLeftRight size={20} color="hsl(210,20%,40%)" />
+              <ArrowLeftRight size={20} color="var(--fg-muted)" />
             </div>
             <div className="form-group">
               <label className="form-label">Container Novo (disponível) *</label>
@@ -139,8 +139,8 @@ export default function TrocaContainer() {
           </div>
 
           {containerAntigo && (
-            <div style={{ background: 'hsl(217 91% 60% / 0.06)', border: '1px solid hsl(217 91% 60% / 0.15)', borderRadius: '0.5rem', padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'hsl(210,20%,65%)' }}>
-              O cliente atual do container <strong style={{ color: 'hsl(217,91%,70%)' }}>{containerAntigo}</strong> será mantido na nova entrega.
+            <div style={{ background: 'hsl(217 91% 60% / 0.06)', border: '1px solid hsl(217 91% 60% / 0.15)', borderRadius: '0.5rem', padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--fg-muted)' }}>
+              O cliente atual do container <strong style={{ color: 'var(--primary)' }}>{containerAntigo}</strong> será mantido na nova entrega.
             </div>
           )}
 

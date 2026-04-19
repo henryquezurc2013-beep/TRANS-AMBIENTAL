@@ -25,10 +25,10 @@ export default function ProtectedRoute({ pagina, children }: Props) {
           justifyContent: 'center',
           minHeight: '60vh',
           gap: '1rem',
-          color: 'hsl(210,20%,50%)',
+          color: 'var(--fg-muted)',
         }}>
           <ShieldOff size={48} />
-          <h2 style={{ margin: 0, color: 'hsl(210,20%,70%)', fontWeight: 600 }}>Acesso Negado</h2>
+          <h2 style={{ margin: 0, color: 'var(--fg)', fontWeight: 600 }}>Acesso Negado</h2>
           <p style={{ margin: 0, fontSize: '0.875rem' }}>Você não tem permissão para acessar esta página.</p>
         </div>
       </AppLayout>

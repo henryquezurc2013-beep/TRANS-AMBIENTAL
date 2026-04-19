@@ -24,6 +24,12 @@ const formVazio: NovoForm = {
   local_patio: '', material_preferencial: '', observacao: '',
 }
 
+function statusColor(s: string) {
+  if (s === 'EM USO')    return 'var(--primary)'
+  if (s === 'DISPONIVEL') return 'var(--success)'
+  return 'var(--warning)'
+}
+
 export default function Containers() {
   const { sessao } = useAuth()
   const toast = useToast()
@@ -52,7 +58,6 @@ export default function Containers() {
     }
     setSalvando(true)
     try {
-      // id_container gerado automaticamente igual ao numero_container
       const id_container = form.numero_container.trim()
       await db.containers.add({
         ...form,
@@ -116,7 +121,7 @@ export default function Containers() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <h1 className="page-title">Containers</h1>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Cadastro e gestão da frota</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Cadastro e gestão da frota</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <input className="input-field" style={{ maxWidth: '220px' }} placeholder="Buscar..." value={busca} onChange={e => setBusca(e.target.value)} />
@@ -127,7 +132,7 @@ export default function Containers() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--fg-muted)' }}>Carregando...</div>
       ) : (
         <div className="table-container">
           <table className="data-table">
@@ -139,7 +144,7 @@ export default function Containers() {
             </thead>
             <tbody>
               {filtrado.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>Nenhum container</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum container</td></tr>
               ) : filtrado.map(c => (
                 <tr key={c.id}>
                   {editandoId === c.id ? (
@@ -150,7 +155,7 @@ export default function Containers() {
                           {CAPACIDADES.map(v => <option key={v} value={v}>{v}</option>)}
                         </select>
                       </td>
-                      <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,55%)' }}>{c.status_operacional}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.status_operacional}</td>
                       <td><input className="input-field" style={{ width: '120px' }} value={editForm.local_patio ?? ''} onChange={e => setEditForm(f => ({ ...f, local_patio: e.target.value }))} /></td>
                       <td>
                         <select className="select-field" style={{ width: '100px' }} value={editForm.estado_conservacao ?? ''} onChange={e => setEditForm(f => ({ ...f, estado_conservacao: e.target.value }))}>
@@ -174,13 +179,11 @@ export default function Containers() {
                     <>
                       <td style={{ fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{c.numero_container}</td>
                       <td style={{ fontSize: '0.8rem' }}>{c.capacidade}</td>
-                      <td style={{ fontSize: '0.8rem', color: c.status_operacional === 'EM USO' ? 'hsl(217,91%,65%)' : c.status_operacional === 'DISPONIVEL' ? 'hsl(142,71%,55%)' : 'hsl(38,92%,60%)' }}>
-                        {c.status_operacional}
-                      </td>
-                      <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,60%)' }}>{c.local_patio || '—'}</td>
+                      <td style={{ fontSize: '0.8rem', color: statusColor(c.status_operacional) }}>{c.status_operacional}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.local_patio || '—'}</td>
                       <td>{badgeConservacao(c.estado_conservacao)}</td>
-                      <td style={{ fontSize: '0.75rem', color: 'hsl(210,20%,55%)' }}>{c.pintura_status}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,55%)' }}>{c.material_preferencial || '—'}</td>
+                      <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{c.pintura_status}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.material_preferencial || '—'}</td>
                       <td>
                         <button className="btn-ghost" style={{ padding: '0.25rem 0.5rem' }} onClick={() => iniciarEdicao(c)}>
                           <Pencil size={13} />

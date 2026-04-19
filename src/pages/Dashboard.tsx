@@ -9,9 +9,9 @@ import { useAuth } from '../contexts/AuthContext'
 
 function getSaudacao(): { texto: string; Icone: typeof Sun; cor: string } {
   const hora = new Date().getHours()
-  if (hora >= 5 && hora < 12)  return { texto: 'Bom dia',   Icone: Sun,  cor: 'hsl(38,92%,55%)'  }
-  if (hora >= 12 && hora < 18) return { texto: 'Boa tarde', Icone: Sun,  cor: 'hsl(25,95%,55%)'  }
-  return                               { texto: 'Boa noite', Icone: Moon, cor: 'hsl(217,91%,65%)' }
+  if (hora >= 5 && hora < 12)  return { texto: 'Bom dia',   Icone: Sun,  cor: 'var(--warning)'  }
+  if (hora >= 12 && hora < 18) return { texto: 'Boa tarde', Icone: Sun,  cor: 'var(--pending)'  }
+  return                               { texto: 'Boa noite', Icone: Moon, cor: 'var(--primary)'  }
 }
 
 function dataFormatada() {
@@ -66,12 +66,12 @@ export default function Dashboard() {
     .map(([nome, total]) => ({ nome: nome.length > 20 ? nome.slice(0, 20) + '…' : nome, total }))
 
   const stats = [
-    { label: 'Containers',      value: containers.length,  icon: Package,      color: 'hsl(217,91%,60%)', route: '/containers' },
-    { label: 'Clientes',        value: clientes.length,    icon: Users,        color: 'hsl(142,71%,45%)', route: '/clientes'   },
-    { label: 'Em Uso',          value: emUso,              icon: Truck,        color: 'hsl(38,92%,50%)',  route: '/controle'   },
-    { label: 'Disponíveis',     value: disponiveis,        icon: CheckCircle,  color: 'hsl(142,71%,45%)', route: '/estoque'    },
-    { label: 'Atrasados',       value: atrasados.length,   icon: AlertTriangle,color: 'hsl(0,84%,60%)',   route: '/atrasados'  },
-    { label: 'Manut. Pendentes',value: manutPendente,      icon: Wrench,       color: 'hsl(38,92%,50%)',  route: '/manutencao' },
+    { label: 'Containers',       value: containers.length, icon: Package,       color: 'var(--primary)',     route: '/containers' },
+    { label: 'Clientes',         value: clientes.length,   icon: Users,         color: 'var(--success)',     route: '/clientes'   },
+    { label: 'Em Uso',           value: emUso,             icon: Truck,         color: 'var(--warning)',     route: '/controle'   },
+    { label: 'Disponíveis',      value: disponiveis,       icon: CheckCircle,   color: 'var(--success)',     route: '/estoque'    },
+    { label: 'Atrasados',        value: atrasados.length,  icon: AlertTriangle, color: 'var(--destructive)', route: '/atrasados'  },
+    { label: 'Manut. Pendentes', value: manutPendente,     icon: Wrench,        color: 'var(--warning)',     route: '/manutencao' },
   ]
 
   async function handleExportJSON() {
@@ -94,7 +94,7 @@ export default function Dashboard() {
 
   if (loading) return (
     <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <span style={{ color: 'hsl(210,20%,50%)' }}>Carregando...</span>
+      <span style={{ color: 'var(--fg-muted)' }}>Carregando...</span>
     </div>
   )
 
@@ -106,39 +106,37 @@ export default function Dashboard() {
         return (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '1.25rem',
-            background: 'hsl(222, 37%, 12%)',
-            border: '1px solid hsl(220, 25%, 20%)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
             borderRadius: '0.9rem',
             padding: '1.25rem 1.5rem',
             marginBottom: '1.75rem',
           }}>
             <div style={{
               width: '3.25rem', height: '3.25rem', flexShrink: 0,
-              background: `${cor.replace(')', ' / 0.12)').replace('hsl(', 'hsl(')}`,
-              border: `1px solid ${cor.replace(')', ' / 0.25)').replace('hsl(', 'hsl(')}`,
+              background: `color-mix(in srgb, ${cor} 12%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${cor} 25%, transparent)`,
               borderRadius: '0.75rem',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Icone size={28} color={cor} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'hsl(210,20%,96%)', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--fg)', lineHeight: 1.2 }}>
                 {texto}, {sessao?.usuarioAtual}!
               </div>
-              <div style={{ fontSize: '0.8125rem', color: 'hsl(210,20%,50%)', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--fg-muted)', marginTop: '0.25rem' }}>
                 {dataFormatada()}
               </div>
-              {!loading && (
-                <div style={{ fontSize: '0.8rem', marginTop: '0.375rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <span style={{ color: atrasados.length > 0 ? 'hsl(0,84%,60%)' : 'hsl(210,20%,45%)' }}>
-                    {atrasados.length} atrasado{atrasados.length !== 1 ? 's' : ''}
-                  </span>
-                  <span style={{ color: 'hsl(210,20%,30%)' }}>·</span>
-                  <span style={{ color: manutPendente > 0 ? 'hsl(38,92%,55%)' : 'hsl(210,20%,45%)' }}>
-                    {manutPendente} manutenç{manutPendente !== 1 ? 'ões' : 'ão'} pendente{manutPendente !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
+              <div style={{ fontSize: '0.8rem', marginTop: '0.375rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <span style={{ color: atrasados.length > 0 ? 'var(--destructive)' : 'var(--fg-muted)' }}>
+                  {atrasados.length} atrasado{atrasados.length !== 1 ? 's' : ''}
+                </span>
+                <span style={{ color: 'hsl(210, 20%, 30%)' }}>·</span>
+                <span style={{ color: manutPendente > 0 ? 'var(--warning)' : 'var(--fg-muted)' }}>
+                  {manutPendente} manutenç{manutPendente !== 1 ? 'ões' : 'ão'} pendente{manutPendente !== 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
           </div>
         )
@@ -148,7 +146,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div>
           <h1 className="page-title">Dashboard</h1>
-          <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Visão geral do sistema</p>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Visão geral do sistema</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button className="btn-secondary" onClick={handleExportJSON}><FileJson size={14} /> Backup JSON</button>
@@ -164,35 +162,35 @@ export default function Dashboard() {
             key={s.label}
             className="stat-card"
             onClick={() => navigate(s.route)}
-            style={{
-              cursor: 'pointer',
-              border: '1px solid transparent',
-              transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-            }}
+            style={{ cursor: 'pointer', border: '1px solid transparent', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' }}
             onMouseEnter={e => {
               const el = e.currentTarget
-              el.style.borderColor = '#3B82F6'
-              el.style.boxShadow = '0 0 0 1px #3B82F6'
+              el.style.borderColor = 'var(--primary)'
+              el.style.boxShadow = '0 0 0 1px var(--primary)'
               const arrow = el.querySelector<HTMLElement>('.stat-arrow')
-              if (arrow) arrow.style.color = '#3B82F6'
+              if (arrow) arrow.style.color = 'var(--primary)'
             }}
             onMouseLeave={e => {
               const el = e.currentTarget
               el.style.borderColor = 'transparent'
               el.style.boxShadow = '0 4px 24px rgba(0,0,0,0.25)'
               const arrow = el.querySelector<HTMLElement>('.stat-arrow')
-              if (arrow) arrow.style.color = '#6b7280'
+              if (arrow) arrow.style.color = 'var(--fg-muted)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
-              <div style={{ background: `${s.color}18`, border: `1px solid ${s.color}35`, borderRadius: '0.5rem', padding: '0.375rem', display: 'flex' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
+              <div style={{
+                background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${s.color} 25%, transparent)`,
+                borderRadius: '0.5rem', padding: '0.375rem', display: 'flex',
+              }}>
                 <s.icon size={14} color={s.color} />
               </div>
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-              <span className="stat-arrow" style={{ fontSize: '12px', color: '#6b7280', transition: 'color 0.2s ease' }}>→</span>
+              <span className="stat-arrow" style={{ fontSize: '12px', color: 'var(--fg-muted)', transition: 'color 0.2s ease' }}>→</span>
             </div>
           </div>
         ))}
@@ -203,15 +201,15 @@ export default function Dashboard() {
         <div className="card">
           <h3 style={{ margin: '0 0 1.25rem', fontSize: '0.9375rem', fontWeight: 600 }}>Top 10 Clientes</h3>
           {topClientes.length === 0 ? (
-            <div style={{ color: 'hsl(210,20%,40%)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>Nenhum dado disponível</div>
+            <div style={{ color: 'var(--fg-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>Nenhum dado disponível</div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={topClientes} layout="vertical" margin={{ left: 0, right: 20 }}>
-                <XAxis type="number" tick={{ fill: 'hsl(210,20%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis type="number" tick={{ fill: 'var(--fg-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="nome" tick={{ fill: 'hsl(210,20%,70%)', fontSize: 11 }} width={130} axisLine={false} tickLine={false} />
                 <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                  contentStyle={{ background: 'hsl(222,37%,12%)', border: '1px solid hsl(220,25%,22%)', borderRadius: '0.5rem', fontSize: '0.8125rem' }}
+                  contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontSize: '0.8125rem' }}
                   labelStyle={{ color: 'hsl(210,20%,85%)' }}
                 />
                 <Bar dataKey="total" radius={[0, 4, 4, 0]}>
@@ -231,7 +229,7 @@ export default function Dashboard() {
             <span className="badge badge-destructive">{atrasados.length}</span>
           </div>
           {atrasados.length === 0 ? (
-            <div style={{ color: 'hsl(210,20%,40%)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
+            <div style={{ color: 'var(--fg-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
               Nenhum atraso! 🎉
             </div>
           ) : (
@@ -246,7 +244,7 @@ export default function Dashboard() {
                 }}>
                   <div>
                     <div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{c.id_container} — {c.cliente}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'hsl(0,84%,60%)', marginTop: '0.125rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--destructive)', marginTop: '0.125rem' }}>
                       {diasAtraso(c.previsao_retirada)} dias em atraso
                     </div>
                   </div>

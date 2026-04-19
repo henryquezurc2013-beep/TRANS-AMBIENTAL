@@ -143,7 +143,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={18} color="hsl(0,84%,60%)" />
+            <AlertTriangle size={18} color="var(--destructive)" />
             <h2 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>Relatório de Atrasados</h2>
           </div>
           <button className="btn-ghost" style={{ padding: '0.25rem' }} onClick={onClose}><X size={18} /></button>
@@ -157,21 +157,21 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
           padding: '1rem',
           marginBottom: '1rem',
         }}>
-          <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,45%)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Prévia do relatório</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Prévia do relatório</div>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'hsl(0,84%,60%)', lineHeight: 1 }}>{lista.length}</div>
-              <div style={{ fontSize: '0.7rem', color: 'hsl(210,20%,50%)', marginTop: '0.125rem' }}>clientes em atraso</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--destructive)', lineHeight: 1 }}>{lista.length}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', marginTop: '0.125rem' }}>clientes em atraso</div>
             </div>
             {lista.length > 0 && (
               <div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'hsl(38,92%,50%)', lineHeight: 1 }}>{maiorAtraso}</div>
-                <div style={{ fontSize: '0.7rem', color: 'hsl(210,20%,50%)', marginTop: '0.125rem' }}>dias (maior atraso)</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--warning)', lineHeight: 1 }}>{maiorAtraso}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', marginTop: '0.125rem' }}>dias (maior atraso)</div>
               </div>
             )}
             <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,55%)' }}>Gerado em</div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(210,20%,80%)' }}>{geradoEm}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>Gerado em</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg)' }}>{geradoEm}</div>
             </div>
           </div>
         </div>
@@ -182,15 +182,15 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid hsl(220,25%,18%)' }}>
-                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'left', fontSize: '0.7rem', color: 'hsl(210,20%,45%)', fontWeight: 600, textTransform: 'uppercase' }}>Cliente</th>
-                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'left', fontSize: '0.7rem', color: 'hsl(210,20%,45%)', fontWeight: 600, textTransform: 'uppercase' }}>Container</th>
-                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'right', fontSize: '0.7rem', color: 'hsl(210,20%,45%)', fontWeight: 600, textTransform: 'uppercase' }}>Atraso</th>
+                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'left', fontSize: '0.7rem', color: 'var(--fg-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Cliente</th>
+                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'left', fontSize: '0.7rem', color: 'var(--fg-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Container</th>
+                  <th style={{ padding: '0.375rem 0.5rem', textAlign: 'right', fontSize: '0.7rem', color: 'var(--fg-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Atraso</th>
                 </tr>
               </thead>
               <tbody>
                 {lista.map(c => {
                   const dias = diasAtraso(c.previsao_retirada)
-                  const cor = dias > 14 ? 'hsl(0,84%,60%)' : dias > 7 ? 'hsl(38,92%,50%)' : 'hsl(38,92%,65%)'
+                  const cor = dias > 14 ? 'var(--destructive)' : dias > 7 ? 'var(--warning)' : 'hsl(38,92%,65%)'
                   return (
                     <tr key={c.id} style={{ borderBottom: '1px solid hsl(220,25%,14%)' }}>
                       <td style={{ padding: '0.375rem 0.5rem', fontWeight: 500 }}>{c.cliente}</td>

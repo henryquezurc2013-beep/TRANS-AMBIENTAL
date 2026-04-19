@@ -45,7 +45,6 @@ export default function LancamentoManutencao() {
         observacao: obs,
       })
 
-      // Se marcado, bloqueia container para entregas
       if (enviarManutencao) {
         await db.containers.updateByIdContainer(idContainer, {
           status_operacional: 'MANUTENCAO',
@@ -75,12 +74,12 @@ export default function LancamentoManutencao() {
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 className="page-title">Lançar Manutenção</h1>
-        <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>Registre uma nova ocorrência de manutenção</p>
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Registre uma nova ocorrência de manutenção</p>
       </div>
 
       <div className="card" style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <Wrench size={18} color="hsl(38,92%,50%)" />
+          <Wrench size={18} color="var(--warning)" />
           <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Nova Ocorrência</h2>
         </div>
 
@@ -91,9 +90,7 @@ export default function LancamentoManutencao() {
               <select className="select-field" value={idContainer} onChange={e => setIdContainer(e.target.value)} required>
                 <option value="">Selecionar...</option>
                 {containers.map(c => (
-                  <option key={c.id} value={c.id_container}>
-                    {c.id_container} ({c.status_operacional})
-                  </option>
+                  <option key={c.id} value={c.id_container}>{c.id_container} ({c.status_operacional})</option>
                 ))}
               </select>
             </div>
@@ -135,20 +132,26 @@ export default function LancamentoManutencao() {
           </div>
 
           {/* Toggle bloquear container */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer', padding: '0.75rem', background: 'hsl(38 92% 50% / 0.06)', border: '1px solid hsl(38 92% 50% / 0.2)', borderRadius: '0.5rem' }}>
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer',
+            padding: '0.75rem',
+            background: 'hsl(38 92% 50% / 0.06)',
+            border: '1px solid hsl(38 92% 50% / 0.2)',
+            borderRadius: '0.5rem',
+          }}>
             <input
               type="checkbox"
               checked={enviarManutencao}
               onChange={e => setEnviarManutencao(e.target.checked)}
-              style={{ width: '1rem', height: '1rem', accentColor: 'hsl(38,92%,50%)' }}
+              style={{ width: '1rem', height: '1rem', accentColor: 'var(--warning)' }}
             />
             <div>
               <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>Bloquear container para manutenção</div>
-              <div style={{ fontSize: '0.75rem', color: 'hsl(210,20%,50%)' }}>Status será alterado para MANUTENÇÃO e não aparecerá nas entregas</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>Status será alterado para MANUTENÇÃO e não aparecerá nas entregas</div>
             </div>
           </label>
 
-          <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', background: 'hsl(38,92%,50%)', marginTop: '0.25rem' }}>
+          <button type="submit" className="btn-warning" disabled={loading} style={{ alignSelf: 'flex-start', marginTop: '0.25rem' }}>
             {loading ? 'Salvando...' : <><Wrench size={15} /> Lançar Manutenção</>}
           </button>
         </form>
