@@ -8,6 +8,7 @@ import { useToast } from '../components/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import StatCard from '../components/StatCard'
 import type { StatCardProps } from '../components/StatCard'
+import ContainerDrawer from '../components/ContainerDrawer'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -79,11 +80,12 @@ export default function Dashboard() {
 
   const [containers,  setContainers]  = useState<Container[]>([])
   const [clientes,    setClientes]    = useState<Cliente[]>([])
-  const [controles,   setControles]   = useState<Controle[]>([])
-  const [manutencoes, setManutencoes] = useState<Manutencao[]>([])
-  const [logs,        setLogs]        = useState<Log[]>([])
-  const [loading,     setLoading]     = useState(true)
-  const [periodo,     setPeriodo]     = useState<Periodo>('7d')
+  const [controles,      setControles]      = useState<Controle[]>([])
+  const [manutencoes,    setManutencoes]    = useState<Manutencao[]>([])
+  const [logs,           setLogs]           = useState<Log[]>([])
+  const [loading,        setLoading]        = useState(true)
+  const [periodo,        setPeriodo]        = useState<Periodo>('7d')
+  const [drawerControle, setDrawerControle] = useState<Controle | null>(null)
   const [selectedStat, setSelectedStat] = useState<number | null>(null)
   const [showTroca,       setShowTroca]       = useState(false)
   const [trocaCliente,    setTrocaCliente]    = useState('')
@@ -634,7 +636,12 @@ export default function Dashboard() {
                     <div key={c.id} style={{ padding: '0.625rem 0', borderBottom: i < Math.min(atrasados.length, 8) - 1 ? '1px solid var(--border-faint)' : 'none' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
                         <div style={{ minWidth: 0 }}>
-                          <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{c.id_container}</span>
+                          <span
+                            className="mono"
+                            style={{ fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: 'var(--primary-fg)', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                            onClick={() => setDrawerControle(c)}
+                            title="Ver detalhes"
+                          >{c.id_container}</span>
                           <div style={{ fontSize: '0.8rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>{c.cliente}</div>
                           <div style={{ fontSize: '0.7rem', color: 'hsl(0,75%,65%)', marginTop: '0.1rem' }}>
                             Previsto {fmtData(c.previsao_retirada!)} · {dias}d atrasado
@@ -901,5 +908,7 @@ export default function Dashboard() {
         }
       `}</style>
     </div>
+
+    <ContainerDrawer controle={drawerControle} onClose={() => setDrawerControle(null)} />
   )
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ── Tailwind v4 theme tokens ─────────────────────────────────────────────── */
@@ -22,31 +22,44 @@
   --radius-sm:              0.5rem;
 }
 
-/* ── Design tokens como CSS custom properties ─────────────────────────────── */
+/* ── Design tokens — Organic / Copper palette ────────────────────────────── */
 :root {
   /* Superfícies */
-  --bg:            hsl(222, 41%, 7%);
-  --sidebar:       hsl(222, 44%, 9%);
-  --card:          hsl(222, 37%, 12%);
-  --card-2:        hsl(222, 37%, 16%);
-
-  /* Cores primárias */
-  --primary:       hsl(217, 91%, 60%);
-  --primary-hover: hsl(217, 91%, 52%);
-
-  /* Status semânticos */
-  --success:       hsl(142, 71%, 45%);
-  --warning:       hsl(38, 92%, 50%);
-  --destructive:   hsl(0, 84%, 60%);
-  --pending:       hsl(25, 95%, 55%);
-
-  /* Bordas */
-  --border:        hsl(220, 25%, 22%);
-  --border-subtle: hsl(220, 25%, 16%);
-
+  --bg:            hsl(140 15% 6%);
+  --sidebar:       hsl(145 18% 8%);
+  --card:          hsl(145 14% 11%);
+  --card-2:        hsl(145 14% 15%);
+  --elev-hi:       hsl(145 14% 9%);
   /* Texto */
-  --fg:            hsl(210, 20%, 96%);
-  --fg-muted:      hsl(210, 20%, 55%);
+  --fg:            hsl(40 18% 94%);
+  --fg-2:          hsl(40 12% 82%);
+  --fg-3:          hsl(40 10% 58%);
+  --fg-mute:       hsl(40 8% 48%);
+  --fg-muted:      hsl(40 8% 48%);
+  --fg-dim:        hsl(40 8% 38%);
+  --fg-faint:      hsl(40 8% 28%);
+  /* Bordas */
+  --border:        hsl(140 12% 22%);
+  --border-soft:   hsl(140 12% 16%);
+  --border-subtle: hsl(140 12% 16%);
+  --border-faint:  hsl(140 12% 13%);
+  /* Copper primary */
+  --primary:       hsl(22 68% 52%);
+  --primary-hover: hsl(22 68% 46%);
+  --primary-soft:  hsl(22 68% 52% / 0.14);
+  --primary-fg:    hsl(22 75% 64%);
+  /* Status */
+  --success:       hsl(142 55% 45%);
+  --success-fg:    hsl(142 55% 60%);
+  --warning:       hsl(38 85% 52%);
+  --warning-fg:    hsl(38 85% 62%);
+  --destructive:   hsl(8 72% 56%);
+  --destructive-fg:hsl(8 72% 66%);
+  --pending:       hsl(25 95% 55%);
+  /* Tipografia */
+  --font-display:  'Instrument Serif', 'Times New Roman', serif;
+  --font-mono:     'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-sans:     'Inter', system-ui, sans-serif;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
@@ -58,13 +71,22 @@
   body {
     margin: 0;
     background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 120% 60% at 50% 0%, hsl(145 20% 10% / 0.6), transparent 60%),
+      radial-gradient(ellipse 80% 40% at 50% 100%, hsl(22 40% 12% / 0.25), transparent 70%);
     color: var(--fg);
     font-family: 'Inter', system-ui, sans-serif;
-    background-image: radial-gradient(ellipse 80% 40% at 50% -10%, hsl(217 91% 60% / 0.12), transparent);
     min-height: 100vh;
   }
-
-  #root { width: 100%; min-height: 100vh; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0; opacity: 0.35;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0 0.8  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-size: 220px 220px;
+  }
+  #root { position: relative; z-index: 1; width: 100%; min-height: 100vh; }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: hsl(222, 41%, 9%); }
@@ -575,14 +597,148 @@
   }
 }
 
-/* ── CSS variables extras ────────────────────────────────────────────────────── */
-:root {
-  --fg-dim:       hsl(210, 20%, 40%);
-  --fg-faint:     hsl(210, 20%, 30%);
-  --fg-mute:      hsl(210, 20%, 50%);
-  --fg-3:         hsl(210, 20%, 60%);
-  --border-faint: hsl(220, 25%, 14%);
-  --border-soft:  hsl(220, 25%, 16%);
-  --font-mono:    'JetBrains Mono', monospace;
-  --elev-hi:      0 24px 64px rgba(0, 0, 0, 0.5);
+/* ── Design System Remix 6 — overrides & new components ─────────────────────── */
+
+/* Editorial page title */
+.page-title {
+  font-family: var(--font-display) !important;
+  font-size: 2.5rem !important;
+  font-weight: 400 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.015em !important;
+}
+
+/* Stat card editorial */
+.stat-card { min-height: 170px; display: flex; flex-direction: column; padding: 1.75rem 1.5rem 1.5rem; }
+.stat-card .kpi-label { font: 500 .75rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+.stat-card .kpi-value { font: 400 3.5rem/1 var(--font-display); letter-spacing: -0.03em; margin-top: auto; }
+.stat-card.is-secondary .kpi-value { font-size: 2rem; }
+.stat-card.is-secondary { min-height: 0; padding: 1rem 1.125rem; }
+
+/* Nav item copper rail */
+.nav-item.active {
+  background: linear-gradient(90deg, hsl(22 68% 52% / 0.14), hsl(22 68% 52% / 0.02)) !important;
+  color: var(--fg) !important;
+  box-shadow: inset 2px 0 0 var(--primary) !important;
+}
+
+/* Button primary copper */
+.btn-primary { background: var(--primary) !important; color: hsl(22 30% 10%) !important; font-weight: 600 !important; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover) !important; }
+
+/* Badge pill */
+.badge { border-radius: 9999px !important; }
+
+/* Table row status tinting */
+.data-table tr[data-status="ATRASADO"] td  { background: linear-gradient(90deg, hsl(8 72% 56% / 0.06), transparent 70%); }
+.data-table tr[data-status="DISPONIVEL"] td { background: linear-gradient(90deg, hsl(142 55% 45% / 0.05), transparent 70%); }
+.data-table tr[data-status="MANUTENCAO"] td { background: linear-gradient(90deg, hsl(38 85% 52% / 0.05), transparent 70%); }
+.data-table tr[data-status="EM USO"] td    { background: linear-gradient(90deg, hsl(22 68% 52% / 0.04), transparent 70%); }
+.data-table tr:hover td { background: hsl(145 14% 14%) !important; }
+
+/* Map card */
+.map-card {
+  position: relative; border-radius: 14px; overflow: hidden; min-height: 340px;
+  background: radial-gradient(ellipse at 50% 50%, hsl(145 18% 13%), hsl(145 18% 9%));
+  border: 1px solid var(--border-soft);
+}
+.map-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(hsl(140 15% 18% / 0.4) 1px, transparent 1px),
+                    linear-gradient(90deg, hsl(140 15% 18% / 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
+}
+.map-pin {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  transform: translate(-50%, -50%); cursor: pointer; transition: transform .15s;
+}
+.map-pin::before {
+  content: ''; position: absolute; inset: -6px; border-radius: 50%;
+  background: currentColor; opacity: 0.25;
+  animation: pin-pulse 2.4s ease-out infinite;
+}
+.map-pin::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: currentColor; box-shadow: 0 0 0 2px hsl(145 18% 9%), 0 0 12px currentColor;
+}
+.map-pin:hover { transform: translate(-50%, -50%) scale(1.35); z-index: 5; }
+@keyframes pin-pulse {
+  0%   { transform: scale(1);   opacity: .4; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Command Palette */
+.cp-backdrop {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 15vh;
+}
+.cp-panel {
+  width: 100%; max-width: 540px; border-radius: 14px;
+  background: hsl(145 14% 13%); border: 1px solid var(--border);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5); overflow: hidden;
+}
+.cp-input-wrap {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border-soft);
+}
+.cp-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  font: 500 .9375rem/1 var(--font-sans); color: var(--fg);
+}
+.cp-input::placeholder { color: var(--fg-dim); }
+.cp-results { max-height: 380px; overflow-y: auto; padding: 6px 0; }
+.cp-group-label {
+  font: 500 .6875rem/1 var(--font-mono); color: var(--fg-dim);
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: 10px 16px 6px;
+}
+.cp-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; cursor: pointer; transition: background .1s;
+  font: 500 .875rem/1 var(--font-sans); color: var(--fg-2);
+}
+.cp-item.on { background: hsl(22 68% 52% / 0.12); color: var(--fg); }
+.cp-meta { font: 500 .6875rem/1 var(--font-mono); color: var(--fg-dim); margin-left: auto; }
+.cp-hint {
+  display: flex; justify-content: space-between; padding: 10px 16px;
+  border-top: 1px solid var(--border-soft);
+  font: 500 .6875rem/1 var(--font-mono); color: var(--fg-dim);
+}
+.cp-hint kbd {
+  font: inherit; background: hsl(145 14% 16%); border: 1px solid var(--border-soft);
+  border-radius: 4px; padding: 2px 5px; margin: 0 2px;
+}
+
+/* Drawer */
+.drawer-backdrop { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 201;
+  width: 420px; max-width: 100vw;
+  background: var(--card); border-left: 1px solid var(--border-soft);
+  display: flex; flex-direction: column;
+  box-shadow: -16px 0 48px rgba(0,0,0,0.35);
+  animation: drawerIn 0.2s ease;
+}
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.drawer-head { padding: 20px 20px 16px; border-bottom: 1px solid var(--border-soft); display: flex; gap: 12px; align-items: flex-start; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+.drawer-foot { padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Motivo chips */
+.motivo-chip {
+  padding: 0.375rem 0.75rem; border-radius: 9999px; cursor: pointer;
+  font-size: 0.8125rem; font-weight: 500; transition: all 0.15s;
+  border: 1px solid var(--border-soft); color: var(--fg-3);
+  background: transparent; font-family: var(--font-sans);
+}
+.motivo-chip.on {
+  border-color: hsl(38 85% 52% / 0.6);
+  background: hsl(38 85% 52% / 0.12);
+  color: var(--warning-fg);
 }

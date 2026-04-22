@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from './Toast'
 import Icon from './Icon'
+import CommandPalette from './CommandPalette'
 
 const GRUPOS = [
   {
@@ -144,6 +145,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [cpOpen, setCpOpen] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCpOpen(true) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   async function handleLogout() {
     await logout()
@@ -238,15 +248,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span>Sistema online · Sincronizado <HorarioAtual /></span>
             </div>
 
-            {/* Busca */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <Icon name="search" size={13} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
-              <input
-                className="input-field"
-                style={{ paddingLeft: '2rem', width: '200px', height: '32px', fontSize: '0.8125rem' }}
-                placeholder="Buscar container, cliente..."
-              />
-            </div>
+            {/* Busca → abre Command Palette */}
+            <button
+              className="btn-ghost"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.75rem', border: '1px solid var(--border-soft)', borderRadius: '0.5rem', width: '200px', justifyContent: 'flex-start', fontSize: '0.8125rem', color: 'var(--fg-dim)' }}
+              onClick={() => setCpOpen(true)}
+            >
+              <Icon name="search" size={13} />
+              Buscar...
+              <kbd style={{ marginLeft: 'auto', fontSize: '0.65rem', background: 'var(--card-2)', border: '1px solid var(--border-soft)', borderRadius: '4px', padding: '1px 5px', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
+            </button>
 
             {/* Notificação */}
             <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
@@ -257,6 +268,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <main>{children}</main>
       </div>
+
+      <CommandPalette open={cpOpen} onClose={() => setCpOpen(false)} />
 
       <style>{`
         @media (min-width: 768px) {

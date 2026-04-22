@@ -120,7 +120,7 @@ export default function ControlePage() {
                     </td>
                   </tr>
                 ) : filtrado.map(r => (
-                  <tr key={r.id}>
+                  <tr key={r.id} data-status={statusControle(r)}>
                     <td>
                       <span className="badge badge-info mono" style={{ fontSize: '0.75rem' }}>{r.id_container}</span>
                     </td>
