@@ -30,9 +30,8 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
   const [imprimindo, setImprimindo] = useState(false)
 
   function telCliente(c: Controle, clientes: Cliente[]): string {
-    if (c.telefone_cliente) return c.telefone_cliente
     const cli = clientes.find(cl => cl.nome_cliente.toLowerCase() === c.cliente.toLowerCase())
-    return cli?.telefone || '—'
+    return cli?.celular || cli?.telefone || c.telefone_cliente || '—'
   }
 
   async function imprimir() {
@@ -107,7 +106,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
       <tr>
         <th style="width:28px;">Nº</th>
         <th>Nome do Cliente</th>
-        <th style="width:100px;">Telefone</th>
+        <th style="width:110px;">Celular / Tel.</th>
         <th style="width:70px;">Container</th>
         <th style="width:76px;">Vencimento</th>
         <th style="width:64px;text-align:center;">Dias em Atraso</th>

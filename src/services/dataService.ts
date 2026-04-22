@@ -36,6 +36,7 @@ export interface Cliente {
   nome_cliente: string
   contato: string
   telefone: string
+  celular: string
   endereco: string
   bairro_cidade: string
   cep: string
@@ -150,7 +151,7 @@ export const db = {
       const { error } = await supabase.from('clientes').insert(payload)
       if (!error) return
       if (error.message?.includes('column') || error.code === '42703') {
-        const { cep: _cep, ...base } = payload
+        const { cep: _cep, celular: _cel, ...base } = payload
         const { error: e2 } = await supabase.from('clientes').insert(base)
         if (e2) throw e2
         return
@@ -161,7 +162,7 @@ export const db = {
       const { error } = await supabase.from('clientes').update(payload).eq('id', id)
       if (!error) return
       if (error.message?.includes('column') || error.code === '42703') {
-        const { cep: _cep, ...base } = payload
+        const { cep: _cep, celular: _cel, ...base } = payload
         const { error: e2 } = await supabase.from('clientes').update(base).eq('id', id)
         if (e2) throw e2
         return
