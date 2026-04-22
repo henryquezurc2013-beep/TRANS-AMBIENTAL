@@ -64,12 +64,12 @@ export default function CadastroRapido() {
         contato_cliente: cliente?.contato ?? '',
         telefone_cliente: cliente?.telefone ?? '',
         data_entrega: dataEntrega,
-        previsao_retirada: containerFixo ? null : previsaoRetirada,
+        previsao_retirada: containerFixo ? null : (previsaoRetirada || null),
         data_retirada: null,
-        material,
-        observacao: obsEntrega,
+        material: material || '',
+        observacao: obsEntrega || '',
         origem_acao: 'LANCADO POR APP',
-        container_fixo: containerFixo,
+        container_fixo: Boolean(containerFixo),
       })
 
       await db.containers.updateByIdContainer(idContainer, {
@@ -89,7 +89,9 @@ export default function CadastroRapido() {
       setObsEntrega('')
       await carregar()
     } catch (err: unknown) {
-      toast(err instanceof Error ? err.message : 'Erro ao lançar entrega', 'error')
+      console.error('Erro ao lançar entrega:', err)
+      const msg = (err as { message?: string })?.message ?? 'Erro ao lançar entrega'
+      toast(msg, 'error')
     }
     setLoading(false)
   }
