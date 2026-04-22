@@ -1,13 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { db, Container, Controle } from '../services/dataService'
 import StatusBadge from '../components/StatusBadge'
 
+type SortDir = 'asc' | 'desc' | 'none'
+type SortCol = 'numero' | 'id_container' | 'status' | 'capacidade' | 'cliente'
+
+function SortIcon({ dir }: { dir: SortDir }) {
+  if (dir === 'asc')  return <span style={{ marginLeft: '0.25rem', opacity: 0.8 }}>↑</span>
+  if (dir === 'desc') return <span style={{ marginLeft: '0.25rem', opacity: 0.8 }}>↓</span>
+  return <span style={{ marginLeft: '0.25rem', opacity: 0.3 }}>↕</span>
+}
+
 export default function Estoque() {
   const [containers, setContainers] = useState<Container[]>([])
-  const [controles, setControles] = useState<Controle[]>([])
-  const [loading, setLoading] = useState(true)
-  const [busca, setBusca] = useState('')
-  const [filtro, setFiltro] = useState('TODOS')
+  const [controles, setControles]   = useState<Controle[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [busca, setBusca]           = useState('')
+  const [filtro, setFiltro]         = useState('TODOS')
+  const [sortCol, setSortCol]       = useState<SortCol>('numero')
+  const [sortDir, setSortDir]       = useState<SortDir>('asc')
 
   useEffect(() => {
     async function carregar() {
@@ -27,6 +38,15 @@ export default function Estoque() {
   const emUso       = containers.filter(c => c.status_operacional === 'EM USO').length
   const manutencao  = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
 
+  function handleSort(col: SortCol) {
+    if (sortCol !== col) {
+      setSortCol(col)
+      setSortDir('asc')
+    } else {
+      setSortDir(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? 'none' : 'asc')
+    }
+  }
+
   const porFiltro = filtro === 'DISPONIVEL'
     ? containers.filter(c => c.status_operacional === 'DISPONIVEL')
     : filtro === 'EM USO'
@@ -39,11 +59,44 @@ export default function Estoque() {
     (clienteAtual[c.id_container] ?? '').toLowerCase().includes(busca.toLowerCase())
   )
 
+  const ordenado = useMemo(() => {
+    if (sortDir === 'none') return filtrado
+    return [...filtrado].sort((a, b) => {
+      let cmp = 0
+      if (sortCol === 'numero') {
+        cmp = Number(a.numero_container) - Number(b.numero_container)
+      } else if (sortCol === 'id_container') {
+        cmp = a.id_container.localeCompare(b.id_container)
+      } else if (sortCol === 'status') {
+        cmp = a.status_operacional.localeCompare(b.status_operacional)
+      } else if (sortCol === 'capacidade') {
+        cmp = a.capacidade.localeCompare(b.capacidade)
+      } else if (sortCol === 'cliente') {
+        const ca = clienteAtual[a.id_container] ?? ''
+        const cb = clienteAtual[b.id_container] ?? ''
+        cmp = ca.localeCompare(cb)
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtrado, sortCol, sortDir])
+
   function badgeConservacao(estado: string) {
     if (estado === 'BOM')     return <span className="badge badge-success">Bom</span>
     if (estado === 'REGULAR') return <span className="badge badge-warning">Regular</span>
     return <span className="badge badge-destructive">Ruim</span>
   }
+
+  const thStyle: React.CSSProperties = {
+    cursor: 'pointer',
+    userSelect: 'none',
+    whiteSpace: 'nowrap',
+  }
+
+  const thHover = (col: SortCol) => ({
+    ...thStyle,
+    color: sortCol === col && sortDir !== 'none' ? 'var(--primary)' : undefined,
+  })
 
   const stats = [
     { label: 'Total',       value: total,       color: 'var(--primary)'     },
@@ -92,14 +145,30 @@ export default function Estoque() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Container</th><th>Nº</th><th>Capacidade</th><th>Status</th>
-                <th>Cliente Atual</th><th>Local Pátio</th><th>Conservação</th><th>Pintura</th>
+                <th style={thHover('id_container')} onClick={() => handleSort('id_container')}>
+                  Container <SortIcon dir={sortCol === 'id_container' ? sortDir : 'none'} />
+                </th>
+                <th style={thHover('numero')} onClick={() => handleSort('numero')}>
+                  Nº <SortIcon dir={sortCol === 'numero' ? sortDir : 'none'} />
+                </th>
+                <th style={thHover('capacidade')} onClick={() => handleSort('capacidade')}>
+                  Capacidade <SortIcon dir={sortCol === 'capacidade' ? sortDir : 'none'} />
+                </th>
+                <th style={thHover('status')} onClick={() => handleSort('status')}>
+                  Status <SortIcon dir={sortCol === 'status' ? sortDir : 'none'} />
+                </th>
+                <th style={thHover('cliente')} onClick={() => handleSort('cliente')}>
+                  Cliente Atual <SortIcon dir={sortCol === 'cliente' ? sortDir : 'none'} />
+                </th>
+                <th>Local Pátio</th>
+                <th>Conservação</th>
+                <th>Pintura</th>
               </tr>
             </thead>
             <tbody>
-              {filtrado.length === 0 ? (
+              {ordenado.length === 0 ? (
                 <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum container</td></tr>
-              ) : filtrado.map(c => (
+              ) : ordenado.map(c => (
                 <tr key={c.id}>
                   <td><span className="badge badge-muted" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{c.id_container}</span></td>
                   <td style={{ color: 'var(--fg-muted)' }}>{c.numero_container}</td>
