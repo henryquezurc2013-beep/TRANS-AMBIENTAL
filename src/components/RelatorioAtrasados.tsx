@@ -6,12 +6,14 @@ interface Props {
   onClose: () => void
 }
 
-function diasAtraso(data: string) {
+function diasAtraso(data: string | null): number {
+  if (!data) return 0
   const hoje = new Date().toISOString().slice(0, 10)
   return Math.floor((new Date(hoje).getTime() - new Date(data).getTime()) / 86400000)
 }
 
-function fmtData(d: string) {
+function fmtData(d: string | null): string {
+  if (!d) return '—'
   return d.split('-').reverse().join('/')
 }
 
