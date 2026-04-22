@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { useToast } from './Toast'
 import Icon from './Icon'
 import CommandPalette from './CommandPalette'
+import MapDrawer from './MapDrawer'
+import ContainerDrawer from './ContainerDrawer'
+import type { Controle } from '../services/dataService'
 
 const GRUPOS = [
   {
@@ -144,8 +147,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [cpOpen, setCpOpen] = useState(false)
+  const [sidebarOpen,    setSidebarOpen]    = useState(false)
+  const [cpOpen,         setCpOpen]         = useState(false)
+  const [mapOpen,        setMapOpen]        = useState(false)
+  const [drawerControle, setDrawerControle] = useState<Controle | null>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -218,7 +223,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Icon name="menu" size={20} />
           </button>
           <img src="/logo.svg" alt="Trans Ambiental" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
-          <div style={{ width: '2rem' }} />
+          <button className="btn-ghost" style={{ padding: '0.375rem' }} onClick={() => setMapOpen(true)}>
+            <Icon name="mappin" size={18} />
+          </button>
         </div>
 
         {/* Header desktop */}
@@ -259,6 +266,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <kbd style={{ marginLeft: 'auto', fontSize: '0.65rem', background: 'var(--card-2)', border: '1px solid var(--border-soft)', borderRadius: '4px', padding: '1px 5px', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
             </button>
 
+            {/* Mapa */}
+            <button
+              className="btn-ghost"
+              style={{ padding: '0.375rem 0.625rem', display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', color: mapOpen ? 'var(--primary-fg)' : 'var(--fg-muted)' }}
+              onClick={() => setMapOpen(true)}
+              title="Mapa de containers (DF)"
+            >
+              <Icon name="mappin" size={15} />
+              Mapa
+            </button>
+
             {/* Notificação */}
             <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
               <Icon name="bell" size={16} />
@@ -270,6 +288,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <CommandPalette open={cpOpen} onClose={() => setCpOpen(false)} />
+
+      <MapDrawer
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        onSelectControle={c => { setMapOpen(false); setDrawerControle(c) }}
+      />
+
+      <ContainerDrawer
+        controle={drawerControle}
+        onClose={() => setDrawerControle(null)}
+      />
 
       <style>{`
         @media (min-width: 768px) {
