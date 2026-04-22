@@ -36,10 +36,10 @@ export interface Cliente {
   nome_cliente: string
   contato: string
   telefone: string
-  celular: string
+  celular: string | null
   endereco: string
   bairro_cidade: string
-  cep: string
+  cep: string | null
   observacao: string
   created_at: string
 }

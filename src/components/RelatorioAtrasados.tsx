@@ -30,13 +30,16 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
   const [imprimindo, setImprimindo] = useState(false)
 
   function telCliente(c: Controle, clientes: Cliente[]): string {
-    const cli = clientes.find(cl => cl.nome_cliente.toLowerCase() === c.cliente.toLowerCase())
+    const norm = (s: string) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const cli = clientes.find(cl => norm(cl.nome_cliente) === norm(c.cliente))
+    console.log(`[Rel] cliente="${c.cliente}" → match=${cli?.nome_cliente ?? 'NÃO ENCONTRADO'} celular="${cli?.celular}" tel="${cli?.telefone}"`)
     return cli?.celular || cli?.telefone || c.telefone_cliente || '—'
   }
 
   async function imprimir() {
     setImprimindo(true)
     const clientes = await db.clientes.getAll().catch(() => [] as Cliente[])
+    console.log('[Rel] clientes carregados:', clientes.length, clientes.map(c => ({ nome: c.nome_cliente, celular: c.celular, tel: c.telefone })))
 
     const linhas = lista.map((c, i) => {
       const dias = diasAtraso(c.previsao_retirada ?? '')
