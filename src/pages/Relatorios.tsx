@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { db, Container, Controle, Manutencao, registrarLog } from '../services/dataService'
 import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
+import RelatorioMotorista from '../components/RelatorioMotorista'
 
 const CORES_CONSERVACAO = ['var(--success)', 'var(--warning)', 'var(--destructive)']
 const CORES_PINTURA     = ['var(--primary)',  'var(--fg-muted)']
@@ -15,8 +16,9 @@ export default function Relatorios() {
   const [controles, setControles]     = useState<Controle[]>([])
   const [manutencoes, setManutencoes] = useState<Manutencao[]>([])
   const [loading, setLoading]         = useState(true)
-  const [busca, setBusca]             = useState('')
-  const [filtro, setFiltro]           = useState<FiltroStatus>('TODOS')
+  const [busca, setBusca]                     = useState('')
+  const [filtro, setFiltro]                   = useState<FiltroStatus>('TODOS')
+  const [modalMotorista, setModalMotorista]   = useState(false)
 
   useEffect(() => {
     async function carregar() {
@@ -84,9 +86,14 @@ export default function Relatorios() {
 
   return (
     <div className="page-container">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="page-title">Relatórios</h1>
-        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Análise visual da frota</p>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 className="page-title">Relatórios</h1>
+          <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: '0.875rem' }}>Análise visual da frota</p>
+        </div>
+        <button className="btn-primary" onClick={() => setModalMotorista(true)}>
+          <Icon name="file" size={14} /> 🖨️ Relatório do Motorista
+        </button>
       </div>
 
       {loading ? (
@@ -216,5 +223,7 @@ export default function Relatorios() {
         </>
       )}
     </div>
+
+    {modalMotorista && <RelatorioMotorista onClose={() => setModalMotorista(false)} />}
   )
 }
