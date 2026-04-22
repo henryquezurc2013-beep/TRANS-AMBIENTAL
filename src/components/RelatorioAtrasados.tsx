@@ -1,4 +1,5 @@
-import { Controle } from '../services/dataService'
+import { useState } from 'react'
+import { Controle, Cliente, db } from '../services/dataService'
 import Icon from './Icon'
 
 interface Props {
@@ -26,17 +27,28 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
   const geradoEm = agora()
   const maiorAtraso = lista.length > 0 ? diasAtraso(lista[0].previsao_retirada ?? '') : 0
   const logoUrl = window.location.origin + '/logo.svg'
+  const [imprimindo, setImprimindo] = useState(false)
 
-  function imprimir() {
+  function telCliente(c: Controle, clientes: Cliente[]): string {
+    if (c.telefone_cliente) return c.telefone_cliente
+    const cli = clientes.find(cl => cl.nome_cliente.toLowerCase() === c.cliente.toLowerCase())
+    return cli?.telefone || '—'
+  }
+
+  async function imprimir() {
+    setImprimindo(true)
+    const clientes = await db.clientes.getAll().catch(() => [] as Cliente[])
+
     const linhas = lista.map((c, i) => {
       const dias = diasAtraso(c.previsao_retirada ?? '')
       const corDias = dias > 14 ? '#c0392b' : dias > 7 ? '#d35400' : '#7d6608'
       const bgLinha = i % 2 === 1 ? 'background:#f7f7f7;' : ''
+      const tel = telCliente(c, clientes)
       return `
         <tr style="${bgLinha}">
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;color:#888;font-weight:600;">${i + 1}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;font-weight:600;">${c.cliente}</td>
-          <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${c.telefone_cliente || '—'}</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${tel}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;font-family:monospace;font-weight:700;">${c.id_container}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${fmtData(c.previsao_retirada ?? '')}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;text-align:center;font-weight:800;color:${corDias};">${dias}</td>
@@ -131,10 +143,12 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) {
       alert('O navegador bloqueou a janela de impressão. Permita pop-ups para este site e tente novamente.')
+      setImprimindo(false)
       return
     }
     win.document.write(html)
     win.document.close()
+    setImprimindo(false)
   }
 
   return (
@@ -212,8 +226,9 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
             className="btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', background: 'hsl(0,84%,55%)' }}
             onClick={imprimir}
+            disabled={imprimindo}
           >
-            <Icon name="printer" size={15} /> Imprimir Relatório
+            <Icon name="printer" size={15} /> {imprimindo ? 'Buscando dados...' : 'Imprimir Relatório'}
           </button>
         </div>
       </div>
