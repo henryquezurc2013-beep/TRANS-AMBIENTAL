@@ -179,7 +179,16 @@ export const db = {
     },
     async add(payload: Omit<Controle, 'id' | 'created_at'>): Promise<void> {
       const { error } = await supabase.from('controle').insert(payload)
-      if (error) throw error
+      if (!error) return
+      // Se a coluna não existir ainda, tenta sem os campos extras
+      const isColErr = error.message?.includes('column') || error.code === '42703'
+      if (isColErr) {
+        const { container_fixo: _cf, origem_acao: _oa, ...base } = payload
+        const { error: e2 } = await supabase.from('controle').insert(base)
+        if (e2) throw e2
+        return
+      }
+      throw error
     },
     async update(id: string, payload: Partial<Controle>): Promise<void> {
       const { error } = await supabase.from('controle').update(payload).eq('id', id)
