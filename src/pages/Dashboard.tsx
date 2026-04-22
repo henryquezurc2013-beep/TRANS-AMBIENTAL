@@ -402,6 +402,7 @@ export default function Dashboard() {
   })()
 
   return (
+    <>
     <div style={{ paddingBottom: '5rem' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
@@ -910,5 +911,6 @@ export default function Dashboard() {
     </div>
 
     <ContainerDrawer controle={drawerControle} onClose={() => setDrawerControle(null)} />
+    </>
   )
 }
