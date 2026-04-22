@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, clearSessao } from '../lib/supabase'
 
 interface Props {
@@ -14,6 +14,7 @@ interface Cliente {
 }
 
 type Tela = 'form' | 'sucesso'
+type StatusContainer = 'idle' | 'loading' | 'found' | 'not_found'
 
 export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVerTrocas }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -21,11 +22,14 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
   const [clienteSelecionado, setClienteSelecionado] = useState('')
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
   const [cacambaRetirada, setCacambaRetirada] = useState('')
+  const [statusContainer, setStatusContainer] = useState<StatusContainer>('idle')
+  const [clienteEncontrado, setClienteEncontrado] = useState('')
   const [cacambaEntregue, setCacambaEntregue] = useState('')
   const [observacao, setObservacao] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [tela, setTela] = useState<Tela>('form')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     supabase
@@ -34,6 +38,34 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
       .order('nome_cliente')
       .then(({ data }) => { if (data) setClientes(data as Cliente[]) })
   }, [])
+
+  function handleCacambaRetirada(valor: string) {
+    setCacambaRetirada(valor)
+    setStatusContainer('idle')
+    setClienteEncontrado('')
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!valor.trim()) return
+
+    debounceRef.current = setTimeout(async () => {
+      setStatusContainer('loading')
+      const { data } = await supabase
+        .from('controle')
+        .select('cliente')
+        .eq('id_container', valor.trim())
+        .is('data_retirada', null)
+        .maybeSingle()
+
+      if (data?.cliente) {
+        setClienteEncontrado(data.cliente)
+        setClienteFiltro(data.cliente)
+        setClienteSelecionado(data.cliente)
+        setStatusContainer('found')
+      } else {
+        setStatusContainer('not_found')
+      }
+    }, 500)
+  }
 
   const sugestoes = clienteFiltro.length >= 2
     ? clientes.filter(c => c.nome_cliente.toLowerCase().includes(clienteFiltro.toLowerCase())).slice(0, 8)
@@ -77,6 +109,8 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
     setCacambaEntregue('')
     setObservacao('')
     setErro('')
+    setStatusContainer('idle')
+    setClienteEncontrado('')
     setTela('form')
   }
 
@@ -156,12 +190,30 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
             <div style={s.field}>
               <label style={s.label}>Caçamba Retirada</label>
               <input
-                style={s.input}
+                style={{
+                  ...s.input,
+                  borderColor: statusContainer === 'found' ? 'hsl(140 60% 40%)' :
+                               statusContainer === 'not_found' ? 'hsl(0 60% 45%)' :
+                               'hsl(140 14% 20%)',
+                }}
                 placeholder="Nº container"
                 value={cacambaRetirada}
-                onChange={e => setCacambaRetirada(e.target.value)}
+                onChange={e => handleCacambaRetirada(e.target.value)}
                 inputMode="text"
               />
+              {statusContainer === 'loading' && (
+                <span style={{ fontSize: '0.72rem', color: 'hsl(140 10% 45%)' }}>Buscando...</span>
+              )}
+              {statusContainer === 'found' && (
+                <span style={{ fontSize: '0.72rem', color: 'hsl(140 60% 55%)', fontWeight: 600 }}>
+                  ✅ {clienteEncontrado}
+                </span>
+              )}
+              {statusContainer === 'not_found' && (
+                <span style={{ fontSize: '0.72rem', color: 'hsl(0 70% 60%)', fontWeight: 600 }}>
+                  ❌ Container não encontrado
+                </span>
+              )}
             </div>
             <div style={s.field}>
               <label style={s.label}>Caçamba Entregue</label>
