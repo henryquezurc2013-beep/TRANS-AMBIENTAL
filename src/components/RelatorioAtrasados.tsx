@@ -22,14 +22,14 @@ function agora() {
 }
 
 export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
-  const lista = [...atrasados].sort((a, b) => diasAtraso(b.previsao_retirada) - diasAtraso(a.previsao_retirada))
+  const lista = [...atrasados].sort((a, b) => diasAtraso(b.previsao_retirada!) - diasAtraso(a.previsao_retirada!))
   const geradoEm = agora()
-  const maiorAtraso = lista.length > 0 ? diasAtraso(lista[0].previsao_retirada) : 0
+  const maiorAtraso = lista.length > 0 ? diasAtraso(lista[0].previsao_retirada!) : 0
   const logoUrl = window.location.origin + '/logo.svg'
 
   function imprimir() {
     const linhas = lista.map((c, i) => {
-      const dias = diasAtraso(c.previsao_retirada)
+      const dias = diasAtraso(c.previsao_retirada!)
       const corDias = dias > 14 ? '#c0392b' : dias > 7 ? '#d35400' : '#7d6608'
       const bgLinha = i % 2 === 1 ? 'background:#f7f7f7;' : ''
       return `
@@ -38,7 +38,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;font-weight:600;">${c.cliente}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${c.telefone_cliente || '—'}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;font-family:monospace;font-weight:700;">${c.id_container}</td>
-          <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${fmtData(c.previsao_retirada)}</td>
+          <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;">${fmtData(c.previsao_retirada!)}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;text-align:center;font-weight:800;color:${corDias};">${dias}</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;color:#aaa;">—</td>
           <td style="padding:5px 6px;border-bottom:1px solid #e0e0e0;font-size:8pt;color:#555;">${c.observacao || '—'}</td>
@@ -189,7 +189,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
               </thead>
               <tbody>
                 {lista.map(c => {
-                  const dias = diasAtraso(c.previsao_retirada)
+                  const dias = diasAtraso(c.previsao_retirada!)
                   const cor = dias > 14 ? 'var(--destructive)' : dias > 7 ? 'var(--warning)' : 'hsl(38,92%,65%)'
                   return (
                     <tr key={c.id} style={{ borderBottom: '1px solid hsl(220,25%,14%)' }}>
