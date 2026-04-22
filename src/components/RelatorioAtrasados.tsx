@@ -106,7 +106,7 @@ export default function RelatorioAtrasados({ atrasados, onClose }: Props) {
       <tr>
         <th style="width:28px;">Nº</th>
         <th>Nome do Cliente</th>
-        <th style="width:110px;">Celular / Tel.</th>
+        <th style="width:110px;">Celular</th>
         <th style="width:70px;">Container</th>
         <th style="width:76px;">Vencimento</th>
         <th style="width:64px;text-align:center;">Dias em Atraso</th>
