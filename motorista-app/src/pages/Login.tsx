@@ -5,14 +5,18 @@ interface Props {
   onLogin: (id: string, nome: string) => void
 }
 
+const SENHA_PADRAO = '102030'
+
 export default function Login({ onLogin }: Props) {
   const [nome, setNome] = useState('')
+  const [senha, setSenha] = useState('')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
 
   async function entrar() {
     const nomeTrimmed = nome.trim()
     if (!nomeTrimmed) { setErro('Digite seu nome para continuar.'); return }
+    if (!senha) { setErro('Digite a senha.'); return }
 
     setEntrando(true)
     setErro('')
@@ -38,6 +42,12 @@ export default function Login({ onLogin }: Props) {
       return
     }
 
+    if (senha !== SENHA_PADRAO) {
+      setErro('Senha incorreta.')
+      setEntrando(false)
+      return
+    }
+
     setSessao({ motorista_id: data.id, motorista_nome: data.nome })
     onLogin(data.id, data.nome)
   }
@@ -55,9 +65,18 @@ export default function Login({ onLogin }: Props) {
           placeholder="Digite seu nome completo"
           value={nome}
           onChange={e => { setNome(e.target.value); setErro('') }}
-          onKeyDown={e => e.key === 'Enter' && entrar()}
           autoComplete="off"
           autoCapitalize="words"
+        />
+
+        <label style={s.label}>Senha</label>
+        <input
+          type="password"
+          style={s.input}
+          placeholder="••••••"
+          value={senha}
+          onChange={e => { setSenha(e.target.value); setErro('') }}
+          onKeyDown={e => e.key === 'Enter' && entrar()}
         />
 
         {erro && <p style={s.erro}>{erro}</p>}
