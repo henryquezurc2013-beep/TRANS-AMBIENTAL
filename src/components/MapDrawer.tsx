@@ -1,41 +1,32 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api'
 import { db, Controle, Cliente } from '../services/dataService'
 import Icon from './Icon'
+import EnviarLocalizacaoModal from './EnviarLocalizacaoModal'
 
-interface Props {
-  open: boolean
-  onClose: () => void
-  onSelectControle: (c: Controle) => void
-}
-
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
+const BRASILIA = { lat: -15.7801, lng: -47.9292 }
 const hoje = new Date().toISOString().slice(0, 10)
 
-const COORDS_BAIRRO: Record<string, { x: number; y: number }> = {
-  'Ceilândia':    { x: 22, y: 64 },
-  'Taguatinga':   { x: 38, y: 72 },
-  'Asa Norte':    { x: 52, y: 42 },
-  'Asa Sul':      { x: 50, y: 58 },
-  'Águas Claras': { x: 32, y: 60 },
-  'SIA':          { x: 46, y: 68 },
-  'Samambaia':    { x: 18, y: 72 },
-  'Sobradinho':   { x: 62, y: 28 },
-  'Gama':         { x: 42, y: 82 },
-  'Luziânia':     { x: 72, y: 68 },
-  'Planaltina':   { x: 72, y: 30 },
-  'Guará':        { x: 44, y: 64 },
-  'Cruzeiro':     { x: 50, y: 52 },
-  'Brazlândia':   { x: 14, y: 40 },
-  'Paranoá':      { x: 68, y: 52 },
-  'Santa Maria':  { x: 54, y: 80 },
-  'default':      { x: 50, y: 50 },
-}
+// Cache de geocodificação persistido na sessão
+const geocodeCache = new Map<string, { lat: number; lng: number } | null>()
 
-const STATUS_COR: Record<string, string> = {
-  'ATRASADO':  'hsl(8 72% 62%)',
-  'FIXO':      'hsl(38 85% 58%)',
-  'EM USO':    'hsl(22 68% 58%)',
-  'DISPONIVEL':'hsl(142 55% 55%)',
-  'MANUTENCAO':'hsl(38 85% 58%)',
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (geocodeCache.has(address)) return geocodeCache.get(address) ?? null
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
+    )
+    const data = await res.json()
+    if (data.status === 'OK' && data.results[0]) {
+      const { lat, lng } = data.results[0].geometry.location
+      const coords = { lat: lat as number, lng: lng as number }
+      geocodeCache.set(address, coords)
+      return coords
+    }
+  } catch { /* ignore */ }
+  geocodeCache.set(address, null)
+  return null
 }
 
 function getStatus(c: Controle): string {
@@ -44,41 +35,60 @@ function getStatus(c: Controle): string {
   return 'EM USO'
 }
 
-function getPosicao(c: Controle, clientes: Cliente[]): { x: number; y: number } {
-  const cli = clientes.find(cl => cl.nome_cliente === c.cliente)
-  const bairroCidade = (cli?.bairro_cidade ?? '').toLowerCase()
-
-  for (const [bairro, coords] of Object.entries(COORDS_BAIRRO)) {
-    if (bairro !== 'default' && bairroCidade.includes(bairro.toLowerCase())) {
-      const hash = [...c.id_container].reduce((a, ch) => a + ch.charCodeAt(0), 0)
-      return {
-        x: Math.max(5, Math.min(95, coords.x + ((hash % 7) - 3))),
-        y: Math.max(5, Math.min(95, coords.y + (((hash * 3) % 7) - 3))),
-      }
-    }
-  }
-
-  const hash = [...c.cliente].reduce((a, ch) => a + ch.charCodeAt(0), 0)
-  const def = COORDS_BAIRRO['default']
-  return {
-    x: Math.max(5, Math.min(95, def.x + ((hash % 13) - 6))),
-    y: Math.max(5, Math.min(95, def.y + (((hash * 3) % 13) - 6))),
-  }
+export const STATUS_COLOR: Record<string, string> = {
+  'EM USO':     '#c97c3a',
+  'ATRASADO':   '#c95236',
+  'FIXO':       '#c99738',
+  'DISPONIVEL': '#3a9a5a',
+  'MANUTENCAO': '#c99738',
 }
 
-interface Tooltip {
-  x: number; y: number
-  id: string; cliente: string; status: string; cor: string
+function markerSVG(color: string): string {
+  const svg = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8" fill="${color}" stroke="#0d1a0d" stroke-width="2.5"/><circle cx="11" cy="11" r="3.5" fill="rgba(255,255,255,0.35)"/></svg>`
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
+const darkStyle = [
+  { elementType: 'geometry',                    stylers: [{ color: '#1a2e1a' }] },
+  { elementType: 'labels.text.fill',            stylers: [{ color: '#8a9a8a' }] },
+  { elementType: 'labels.text.stroke',          stylers: [{ color: '#1a2e1a' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d4a2d' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a2e1a' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d2b3e' }] },
+  { featureType: 'poi',  stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+]
+
+export interface PinData {
+  controle: Controle
+  cliente: Cliente | undefined
+  coords: { lat: number; lng: number }
+  status: string
+  cor: string
+}
+
+interface Props {
+  open: boolean
+  onClose: () => void
+  onSelectControle: (c: Controle) => void
 }
 
 export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
-  const [controles, setControles] = useState<Controle[]>([])
-  const [clientes,  setClientes]  = useState<Cliente[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [tooltip,   setTooltip]   = useState<Tooltip | null>(null)
-  const [satelite,  setSatelite]  = useState(false)
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: API_KEY,
+  })
 
-  const fechar = useCallback(() => { setTooltip(null); onClose() }, [onClose])
+  const [pins,       setPins]       = useState<PinData[]>([])
+  const [loading,    setLoading]    = useState(false)
+  const [geocoding,  setGeocoding]  = useState(false)
+  const [satelite,   setSatelite]   = useState(false)
+  const [selected,   setSelected]   = useState<PinData | null>(null)
+  const [modalEnvio, setModalEnvio] = useState<PinData | null>(null)
+
+  const fechar = useCallback(() => {
+    setSelected(null); setModalEnvio(null); onClose()
+  }, [onClose])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar() }
@@ -89,31 +99,57 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
   useEffect(() => {
     if (!open) return
     setLoading(true)
-    Promise.all([db.controle.getEmAberto(), db.clientes.getAll()]).then(([ctrl, clis]) => {
-      setControles(ctrl)
-      setClientes(clis)
-      setLoading(false)
-    })
+    setGeocoding(false)
+    setPins([])
+    setSelected(null)
+
+    Promise.all([db.controle.getEmAberto(), db.clientes.getAll()])
+      .then(async ([ctrl, clis]) => {
+        setLoading(false)
+        if (ctrl.length === 0) return
+        setGeocoding(true)
+
+        for (const c of ctrl) {
+          const cli = clis.find(cl => cl.nome_cliente === c.cliente)
+          const address = cli
+            ? `${cli.endereco}, ${cli.bairro_cidade}, Distrito Federal, Brasil`
+            : `${c.cliente}, Brasília, Distrito Federal, Brasil`
+
+          let coords = await geocodeAddress(address)
+          if (!coords) {
+            const hash = [...c.id_container].reduce((a, ch) => a + ch.charCodeAt(0), 0)
+            coords = {
+              lat: -15.7801 + ((hash % 20) - 10) * 0.008,
+              lng: -47.9292 + (((hash * 3) % 20) - 10) * 0.008,
+            }
+          }
+
+          const status = getStatus(c)
+          const pin: PinData = { controle: c, cliente: cli, coords, status, cor: STATUS_COLOR[status] ?? '#c97c3a' }
+          setPins(prev => [...prev, pin])
+          await new Promise(r => setTimeout(r, 45))
+        }
+        setGeocoding(false)
+      })
   }, [open])
+
+  const mapOptions = useMemo(() => ({
+    styles: satelite ? [] : darkStyle,
+    mapTypeId: satelite ? 'satellite' : 'roadmap',
+    disableDefaultUI: false,
+    zoomControl: true,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    clickableIcons: false,
+  }), [satelite])
 
   if (!open) return null
 
-  const pins = controles.map(c => {
-    const status = getStatus(c)
-    const pos = getPosicao(c, clientes)
-    return { controle: c, status, cor: STATUS_COR[status] ?? STATUS_COR['EM USO'], pos }
-  })
-
-  const bgMap = satelite
-    ? 'radial-gradient(ellipse at 40% 60%, hsl(130 30% 12%), hsl(145 18% 7%))'
-    : 'radial-gradient(ellipse at 50% 50%, hsl(145 18% 13%), hsl(145 18% 9%))'
-
   return (
     <>
-      {/* Backdrop */}
       <div className="drawer-backdrop" style={{ zIndex: 299 }} onClick={fechar} />
 
-      {/* Drawer */}
       <div className="map-drawer">
         {/* Header */}
         <div className="map-drawer-head">
@@ -125,20 +161,21 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
               Onde estão seus containers
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Toggle satélite/mapa */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            {geocoding && (
+              <span style={{ fontSize: '0.65rem', color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)' }}>
+                Geocodificando...
+              </span>
+            )}
             <div style={{ display: 'flex', background: 'hsl(145 14% 14%)', border: '1px solid var(--border-soft)', borderRadius: '0.5rem', overflow: 'hidden' }}>
               {(['Mapa', 'Satélite'] as const).map(m => (
-                <button
-                  key={m}
-                  style={{
-                    padding: '0.3rem 0.75rem', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500,
-                    background: (m === 'Satélite') === satelite ? 'var(--primary)' : 'transparent',
-                    color:      (m === 'Satélite') === satelite ? 'hsl(22 30% 10%)' : 'var(--fg-3)',
-                    transition: 'all 0.15s',
-                  }}
-                  onClick={() => setSatelite(m === 'Satélite')}
-                >
+                <button key={m} style={{
+                  padding: '0.3rem 0.75rem', border: 'none', cursor: 'pointer',
+                  fontSize: '0.75rem', fontWeight: 500, transition: 'all 0.15s',
+                  background: (m === 'Satélite') === satelite ? 'var(--primary)' : 'transparent',
+                  color:      (m === 'Satélite') === satelite ? 'hsl(22 30% 10%)' : 'var(--fg-3)',
+                }} onClick={() => setSatelite(m === 'Satélite')}>
                   {m}
                 </button>
               ))}
@@ -149,159 +186,97 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
           </div>
         </div>
 
-        {/* Mapa */}
+        {/* Corpo */}
         <div className="map-drawer-body">
-          {loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--fg-dim)', fontSize: '0.875rem' }}>
-              Carregando mapa...
+          {(!isLoaded || loading) ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--fg-dim)', fontSize: '0.875rem', gap: '0.5rem' }}>
+              <div style={{ width: '16px', height: '16px', border: '2px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              {loading ? 'Carregando dados...' : 'Inicializando mapa...'}
             </div>
           ) : (
-            <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden', background: bgMap, border: '1px solid var(--border-soft)' }}>
-
-              {/* Grid */}
-              <div style={{
-                position: 'absolute', inset: 0,
-                backgroundImage: 'linear-gradient(hsl(140 15% 18% / 0.35) 1px, transparent 1px), linear-gradient(90deg, hsl(140 15% 18% / 0.35) 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-                maskImage: 'radial-gradient(ellipse at center, #000 45%, transparent 88%)',
-              }} />
-
-              {/* SVG — contorno do DF + Lago */}
-              <svg
-                viewBox="0 0 100 100"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                preserveAspectRatio="none"
+            <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-soft)', minHeight: 0 }}>
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={BRASILIA}
+                zoom={11}
+                options={mapOptions as object}
               >
-                {/* Contorno do DF — polígono simplificado */}
-                <polygon
-                  points="14,20 28,10 60,8 80,16 85,44 82,64 68,88 44,92 22,86 10,65 10,44"
-                  fill={satelite ? 'hsl(130 22% 14% / 0.45)' : 'hsl(145 18% 14% / 0.55)'}
-                  stroke="hsl(140 18% 32% / 0.5)"
-                  strokeWidth="0.6"
-                  vectorEffect="non-scaling-stroke"
-                />
-                {/* Eixo Monumental (linha central leste-oeste) */}
-                <line x1="36" y1="50" x2="64" y2="50" stroke="hsl(140 15% 28% / 0.5)" strokeWidth="0.4" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
-                {/* Lago Paranoá */}
-                <path
-                  d="M 63,38 C 69,32 74,40 71,50 C 69,58 63,58 60,53 C 56,47 58,40 63,38 Z"
-                  fill="hsl(210 55% 35% / 0.35)"
-                  stroke="hsl(210 55% 60% / 0.4)"
-                  strokeWidth="0.5"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <text x="66" y="47" fontSize="2.2" fill="hsl(210 55% 70% / 0.55)" textAnchor="middle" fontFamily="serif" fontStyle="italic">
-                  Paranoá
-                </text>
-                {/* Label Brasília */}
-                <text x="50" y="50" fontSize="3.5" fill="hsl(40 10% 70% / 0.12)" textAnchor="middle" fontFamily="serif" fontWeight="bold" letterSpacing="1">
-                  BRASÍLIA
-                </text>
-              </svg>
+                {pins.map(pin => (
+                  <Marker
+                    key={pin.controle.id}
+                    position={pin.coords}
+                    icon={{ url: markerSVG(pin.cor), scaledSize: { width: 22, height: 22 } as unknown as google.maps.Size }}
+                    onClick={() => setSelected(pin)}
+                  />
+                ))}
 
-              {/* Pins */}
-              {pins.map(({ controle: c, cor, pos }) => (
-                <div
-                  key={c.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${pos.x}%`, top: `${pos.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    cursor: 'pointer',
-                    zIndex: tooltip?.id === c.id_container ? 10 : 2,
-                  }}
-                  onMouseEnter={() => setTooltip({ x: pos.x, y: pos.y, id: c.id_container, cliente: c.cliente, status: getStatus(c), cor })}
-                  onMouseLeave={() => setTooltip(null)}
-                  onClick={() => { onSelectControle(c); fechar() }}
-                >
-                  {/* Anel de pulse */}
-                  <div style={{
-                    position: 'absolute', inset: '-6px', borderRadius: '50%',
-                    background: cor, opacity: 0.22,
-                    animation: 'pin-pulse 2.4s ease-out infinite',
-                  }} />
-                  {/* Dot */}
-                  <div style={{
-                    width: '12px', height: '12px', borderRadius: '50%',
-                    background: cor,
-                    boxShadow: `0 0 0 2px hsl(145 18% 9%), 0 0 10px ${cor}`,
-                  }} />
-                </div>
-              ))}
-
-              {/* Tooltip */}
-              {tooltip && (
-                <div style={{
-                  position: 'absolute',
-                  left: `${Math.min(tooltip.x + 3, 58)}%`,
-                  top: `${Math.max(tooltip.y - 14, 2)}%`,
-                  background: 'hsl(145 14% 10% / 0.97)',
-                  border: `1px solid ${tooltip.cor}44`,
-                  borderRadius: '0.5rem',
-                  padding: '0.45rem 0.7rem',
-                  pointerEvents: 'none',
-                  zIndex: 20,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-                  minWidth: '140px',
-                }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, color: tooltip.cor }}>{tooltip.id}</div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--fg-2)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>{tooltip.cliente}</div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--fg-dim)', marginTop: '0.1rem' }}>{tooltip.status}</div>
-                </div>
-              )}
+                {selected && (
+                  <InfoWindow position={selected.coords} onCloseClick={() => setSelected(null)}>
+                    <div style={{ background: '#182818', color: '#e8e0d0', padding: '0.75rem 0.875rem', minWidth: '210px', fontFamily: 'Inter, sans-serif', fontSize: '0.8125rem', borderRadius: '4px', lineHeight: 1.45 }}>
+                      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.875rem', fontWeight: 700, color: selected.cor, marginBottom: '0.25rem' }}>
+                        {selected.controle.id_container}
+                      </div>
+                      <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>{selected.controle.cliente}</div>
+                      {selected.cliente?.endereco && (
+                        <div style={{ color: '#8a9a8a', fontSize: '0.75rem' }}>{selected.cliente.endereco}</div>
+                      )}
+                      {selected.cliente?.bairro_cidade && (
+                        <div style={{ color: '#8a9a8a', fontSize: '0.75rem', marginBottom: '0.375rem' }}>{selected.cliente.bairro_cidade}</div>
+                      )}
+                      <div style={{ display: 'inline-block', padding: '0.1rem 0.45rem', borderRadius: '9999px', background: `${selected.cor}25`, color: selected.cor, fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.625rem' }}>
+                        {selected.status}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.375rem' }}>
+                        <button
+                          onClick={() => { onSelectControle(selected.controle); fechar() }}
+                          style={{ flex: 1, background: '#1e3a1e', color: '#8a9a8a', border: '1px solid #2d4a2d', borderRadius: '4px', padding: '0.3rem 0.5rem', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          Ver detalhes
+                        </button>
+                        <button
+                          onClick={() => setModalEnvio(selected)}
+                          style={{ flex: 1, background: '#1e2e3a', color: '#7a9a8a', border: '1px solid #2d3a4a', borderRadius: '4px', padding: '0.3rem 0.5rem', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          📍 Enviar loc.
+                        </button>
+                      </div>
+                    </div>
+                  </InfoWindow>
+                )}
+              </GoogleMap>
 
               {/* Contador ao vivo */}
-              <div style={{
-                position: 'absolute', top: '12px', right: '12px',
-                display: 'flex', alignItems: 'center', gap: '0.375rem',
-                background: 'hsl(145 14% 9% / 0.88)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid var(--border-soft)',
-                borderRadius: '9999px',
-                padding: '0.3rem 0.8rem',
-                fontSize: '0.7rem', fontWeight: 600,
-                color: 'var(--fg-2)',
-                fontFamily: 'var(--font-mono)',
-              }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block', animation: 'pin-pulse 2s ease-out infinite' }} />
+              <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, pointerEvents: 'none', background: 'hsl(145 14% 9% / 0.9)', backdropFilter: 'blur(8px)', border: '1px solid var(--border-soft)', borderRadius: '9999px', padding: '0.3rem 0.8rem', fontSize: '0.7rem', fontWeight: 600, color: 'var(--fg-2)', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
                 {pins.length} CONTAINERS AO VIVO
               </div>
 
               {/* Legenda */}
-              <div style={{
-                position: 'absolute', bottom: '12px', left: '12px',
-                background: 'hsl(145 14% 9% / 0.88)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid var(--border-soft)',
-                borderRadius: '0.625rem',
-                padding: '0.5rem 0.75rem',
-                display: 'flex', flexDirection: 'column', gap: '0.3rem',
-              }}>
+              <div style={{ position: 'absolute', bottom: '32px', left: '12px', zIndex: 10, pointerEvents: 'none', background: 'hsl(145 14% 9% / 0.9)', backdropFilter: 'blur(8px)', border: '1px solid var(--border-soft)', borderRadius: '0.625rem', padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 {[
-                  { status: 'EM USO',     cor: STATUS_COR['EM USO']     },
-                  { status: 'ATRASADO',   cor: STATUS_COR['ATRASADO']   },
-                  { status: 'FIXO',       cor: STATUS_COR['FIXO']       },
-                ].map(({ status, cor }) => {
-                  const count = pins.filter(p => p.status === status).length
+                  { label: 'EM USO',   cor: STATUS_COLOR['EM USO'] },
+                  { label: 'ATRASADO', cor: STATUS_COLOR['ATRASADO'] },
+                  { label: 'FIXO',     cor: STATUS_COLOR['FIXO'] },
+                ].map(({ label, cor }) => {
+                  const count = pins.filter(p => p.status === label).length
                   if (count === 0) return null
                   return (
-                    <div key={status} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.65rem', color: 'var(--fg-3)' }}>
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.65rem', color: 'var(--fg-3)' }}>
                       <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: cor, flexShrink: 0 }} />
-                      <span>{status}</span>
+                      <span>{label}</span>
                       <span style={{ marginLeft: 'auto', paddingLeft: '0.5rem', color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)' }}>{count}</span>
                     </div>
                   )
                 })}
               </div>
-
-              {/* Hint clique */}
-              <div style={{ position: 'absolute', bottom: '12px', right: '12px', fontSize: '0.6rem', color: 'var(--fg-faint)', fontFamily: 'var(--font-mono)' }}>
-                Clique no pin para detalhes
-              </div>
             </div>
           )}
         </div>
       </div>
+
+      {modalEnvio && (
+        <EnviarLocalizacaoModal pin={modalEnvio} onClose={() => setModalEnvio(null)} />
+      )}
     </>
   )
 }
