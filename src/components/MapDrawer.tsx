@@ -9,10 +9,11 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
 const BRASIL_CENTER = { lat: -14.235, lng: -51.9253 }
 const hoje = new Date().toISOString().slice(0, 10)
 
-const geocodeCache = new Map<string, { lat: number; lng: number } | null>()
+// Só cacheia sucessos — falhas são retentadas na próxima abertura
+const geocodeCache = new Map<string, { lat: number; lng: number }>()
 
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  if (geocodeCache.has(address)) return geocodeCache.get(address) ?? null
+async function geocodeOne(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (geocodeCache.has(address)) return geocodeCache.get(address)!
   try {
     const res = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
@@ -25,8 +26,26 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
       return coords
     }
   } catch { /* ignore */ }
-  geocodeCache.set(address, null)
   return null
+}
+
+async function geocodeAddress(
+  cli: { endereco: string; bairro_cidade: string } | undefined,
+  clienteNome: string,
+): Promise<{ lat: number; lng: number } | null> {
+  if (cli) {
+    const full    = [cli.endereco, cli.bairro_cidade, 'Brasil'].filter(Boolean).join(', ')
+    const partial = [cli.bairro_cidade, 'Brasil'].filter(Boolean).join(', ')
+    console.log('Geocoding full:', full)
+    const r1 = await geocodeOne(full)
+    if (r1) return r1
+    console.log('Geocoding fallback:', partial)
+    const r2 = await geocodeOne(partial)
+    if (r2) return r2
+  }
+  const byName = `${clienteNome}, Brasil`
+  console.log('Geocoding por nome:', byName)
+  return geocodeOne(byName)
 }
 
 function getStatus(c: Controle): string {
@@ -127,14 +146,11 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
 
         for (const c of ctrl) {
           const cli = clis.find(cl => cl.nome_cliente === c.cliente)
-          const address = cli
-            ? `${cli.endereco}, ${cli.bairro_cidade}, Brasil`
-            : `${c.cliente}, Brasil`
 
-          let coords = await geocodeAddress(address)
+          let coords = await geocodeAddress(cli, c.cliente)
           if (!coords) {
             semCoords++
-            // Fallback: espalhar ao redor do centro do Brasil
+            // Último recurso: posição pseudoaleatória no Brasil
             const hash = [...c.id_container].reduce((a, ch) => a + ch.charCodeAt(0), 0)
             coords = {
               lat: -14.235 + ((hash % 30) - 15) * 0.5,
