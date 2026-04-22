@@ -12,6 +12,7 @@ export default function Login({ onLogin }: Props) {
   const [selecionado, setSelecionado] = useState('')
   const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(true)
+  const [erroCarregamento, setErroCarregamento] = useState('')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -19,10 +20,16 @@ export default function Login({ onLogin }: Props) {
     supabase
       .from('motoristas')
       .select('*')
-      .eq('ativo', true)
       .order('nome')
       .then(({ data, error }) => {
-        if (!error && data) setMotoristas(data as Motorista[])
+        console.log('motoristas data:', data, 'error:', error)
+        if (error) {
+          setErroCarregamento(`Erro ao carregar: ${error.message}`)
+        } else if (!data || data.length === 0) {
+          setErroCarregamento('Nenhum motorista cadastrado no sistema.')
+        } else {
+          setMotoristas(data as Motorista[])
+        }
         setLoading(false)
       })
   }, [])
@@ -45,6 +52,8 @@ export default function Login({ onLogin }: Props) {
 
         {loading ? (
           <div style={s.loading}>Carregando motoristas...</div>
+        ) : erroCarregamento ? (
+          <div style={s.erroCard}>{erroCarregamento}</div>
         ) : (
           <>
             <label style={s.label}>Seu nome</label>
@@ -161,6 +170,17 @@ const s: Record<string, React.CSSProperties> = {
     color: 'hsl(140 10% 50%)',
     fontSize: '0.9rem',
     padding: '1rem 0',
+  },
+  erroCard: {
+    background: 'hsl(0 50% 12%)',
+    border: '1px solid hsl(0 50% 25%)',
+    borderRadius: '0.75rem',
+    padding: '1rem',
+    color: 'hsl(0 70% 65%)',
+    fontSize: '0.85rem',
+    textAlign: 'center' as const,
+    width: '100%',
+    marginTop: '0.5rem',
   },
   erro: {
     color: 'hsl(0 70% 60%)',
