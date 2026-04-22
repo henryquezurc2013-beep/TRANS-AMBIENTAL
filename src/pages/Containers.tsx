@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, useMemo, FormEvent } from 'react'
 import { db, Container, registrarLog } from '../services/dataService'
 import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
@@ -24,6 +24,15 @@ const formVazio: NovoForm = {
   local_patio: '', material_preferencial: '', observacao: '',
 }
 
+type SortDir = 'asc' | 'desc' | 'none'
+type SortCol = 'numero' | 'capacidade' | 'status'
+
+function SortIcon({ dir }: { dir: SortDir }) {
+  if (dir === 'asc')  return <span style={{ marginLeft: '0.25rem', opacity: 0.8 }}>↑</span>
+  if (dir === 'desc') return <span style={{ marginLeft: '0.25rem', opacity: 0.8 }}>↓</span>
+  return <span style={{ marginLeft: '0.25rem', opacity: 0.3 }}>↕</span>
+}
+
 function statusColor(s: string) {
   if (s === 'EM USO')    return 'var(--primary)'
   if (s === 'DISPONIVEL') return 'var(--success)'
@@ -40,7 +49,14 @@ export default function Containers() {
   const [salvando, setSalvando] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<Container>>({})
-  const [busca, setBusca] = useState('')
+  const [busca, setBusca]     = useState('')
+  const [sortCol, setSortCol] = useState<SortCol>('numero')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  function handleSort(col: SortCol) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc') }
+    else setSortDir(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? 'none' : 'asc')
+  }
 
   useEffect(() => { carregar() }, [])
 
@@ -110,6 +126,18 @@ export default function Containers() {
     c.capacidade.toLowerCase().includes(busca.toLowerCase())
   )
 
+  const ordenado = useMemo(() => {
+    if (sortDir === 'none') return filtrado
+    return [...filtrado].sort((a, b) => {
+      let cmp = 0
+      if (sortCol === 'numero')    cmp = Number(a.numero_container) - Number(b.numero_container)
+      if (sortCol === 'capacidade') cmp = a.capacidade.localeCompare(b.capacidade)
+      if (sortCol === 'status')    cmp = a.status_operacional.localeCompare(b.status_operacional)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtrado, sortCol, sortDir])
+
   function badgeConservacao(e: string) {
     if (e === 'BOM') return <span className="badge badge-success">Bom</span>
     if (e === 'REGULAR') return <span className="badge badge-warning">Regular</span>
@@ -138,14 +166,24 @@ export default function Containers() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Nº</th><th>Capacidade</th><th>Status</th>
+                {([
+                  { col: 'numero',    label: 'Nº'         },
+                  { col: 'capacidade', label: 'Capacidade' },
+                  { col: 'status',    label: 'Status'     },
+                ] as { col: SortCol; label: string }[]).map(({ col, label }) => (
+                  <th key={col}
+                    style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', color: sortCol === col && sortDir !== 'none' ? 'var(--primary)' : undefined }}
+                    onClick={() => handleSort(col)}>
+                    {label} <SortIcon dir={sortCol === col ? sortDir : 'none'} />
+                  </th>
+                ))}
                 <th>Local Pátio</th><th>Conservação</th><th>Pintura</th><th>Material Pref.</th><th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {filtrado.length === 0 ? (
+              {ordenado.length === 0 ? (
                 <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--fg-muted)' }}>Nenhum container</td></tr>
-              ) : filtrado.map(c => (
+              ) : ordenado.map(c => (
                 <tr key={c.id}>
                   {editandoId === c.id ? (
                     <>
