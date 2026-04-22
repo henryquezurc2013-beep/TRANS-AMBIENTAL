@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { GoogleMap, useJsApiLoader } from '@react-google-maps/api'
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
 import { db, Controle, Cliente } from '../services/dataService'
 import Icon from './Icon'
 import EnviarLocalizacaoModal from './EnviarLocalizacaoModal'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
-const BRASILIA = { lat: -15.7801, lng: -47.9292 }
+const BRASIL_CENTER = { lat: -14.235, lng: -51.9253 }
 const hoje = new Date().toISOString().slice(0, 10)
 
-// Cache de geocodificação persistido na sessão
 const geocodeCache = new Map<string, { lat: number; lng: number } | null>()
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -44,18 +44,18 @@ export const STATUS_COLOR: Record<string, string> = {
 }
 
 function markerSVG(color: string): string {
-  const svg = `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8" fill="${color}" stroke="#0d1a0d" stroke-width="2.5"/><circle cx="11" cy="11" r="3.5" fill="rgba(255,255,255,0.35)"/></svg>`
+  const svg = `<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="13" r="9" fill="${color}" stroke="#0d1a0d" stroke-width="2.5"/><circle cx="13" cy="13" r="4" fill="rgba(255,255,255,0.35)"/></svg>`
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
 }
 
 const darkStyle = [
-  { elementType: 'geometry',                    stylers: [{ color: '#1a2e1a' }] },
-  { elementType: 'labels.text.fill',            stylers: [{ color: '#8a9a8a' }] },
-  { elementType: 'labels.text.stroke',          stylers: [{ color: '#1a2e1a' }] },
+  { elementType: 'geometry',                      stylers: [{ color: '#1a2e1a' }] },
+  { elementType: 'labels.text.fill',              stylers: [{ color: '#8a9a8a' }] },
+  { elementType: 'labels.text.stroke',            stylers: [{ color: '#1a2e1a' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d4a2d' }] },
   { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a2e1a' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d2b3e' }] },
-  { featureType: 'poi',  stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi',     stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
 ]
 
@@ -79,12 +79,17 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
     googleMapsApiKey: API_KEY,
   })
 
-  const [pins,       setPins]       = useState<PinData[]>([])
-  const [loading,    setLoading]    = useState(false)
-  const [geocoding,  setGeocoding]  = useState(false)
-  const [satelite,   setSatelite]   = useState(false)
-  const [selected,   setSelected]   = useState<PinData | null>(null)
-  const [modalEnvio, setModalEnvio] = useState<PinData | null>(null)
+  const mapRef                          = useRef<google.maps.Map | null>(null)
+  const clustererRef                    = useRef<MarkerClusterer | null>(null)
+  const markersRef                      = useRef<google.maps.Marker[]>([])
+  const [pins,          setPins]        = useState<PinData[]>([])
+  const [loading,       setLoading]     = useState(false)
+  const [geocoding,     setGeocoding]   = useState(false)
+  const [naoLocalizados, setNaoLoc]    = useState(0)
+  const [satelite,      setSatelite]    = useState(false)
+  const [selected,      setSelected]    = useState<PinData | null>(null)
+  const [infoWindow,    setInfoWindow]  = useState<google.maps.InfoWindow | null>(null)
+  const [modalEnvio,    setModalEnvio]  = useState<PinData | null>(null)
 
   const fechar = useCallback(() => {
     setSelected(null); setModalEnvio(null); onClose()
@@ -96,42 +101,164 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
     return () => window.removeEventListener('keydown', handler)
   }, [fechar])
 
+  // Limpa markers e clusterer ao fechar
+  useEffect(() => {
+    if (!open) {
+      markersRef.current.forEach(m => m.setMap(null))
+      markersRef.current = []
+      clustererRef.current?.clearMarkers()
+    }
+  }, [open])
+
   useEffect(() => {
     if (!open) return
     setLoading(true)
     setGeocoding(false)
     setPins([])
     setSelected(null)
+    setNaoLoc(0)
 
     Promise.all([db.controle.getEmAberto(), db.clientes.getAll()])
       .then(async ([ctrl, clis]) => {
         setLoading(false)
         if (ctrl.length === 0) return
         setGeocoding(true)
+        let semCoords = 0
 
         for (const c of ctrl) {
           const cli = clis.find(cl => cl.nome_cliente === c.cliente)
           const address = cli
-            ? `${cli.endereco}, ${cli.bairro_cidade}, Distrito Federal, Brasil`
-            : `${c.cliente}, Brasília, Distrito Federal, Brasil`
+            ? `${cli.endereco}, ${cli.bairro_cidade}, Brasil`
+            : `${c.cliente}, Brasil`
 
           let coords = await geocodeAddress(address)
           if (!coords) {
+            semCoords++
+            // Fallback: espalhar ao redor do centro do Brasil
             const hash = [...c.id_container].reduce((a, ch) => a + ch.charCodeAt(0), 0)
             coords = {
-              lat: -15.7801 + ((hash % 20) - 10) * 0.008,
-              lng: -47.9292 + (((hash * 3) % 20) - 10) * 0.008,
+              lat: -14.235 + ((hash % 30) - 15) * 0.5,
+              lng: -51.925 + (((hash * 3) % 30) - 15) * 0.5,
             }
           }
 
           const status = getStatus(c)
           const pin: PinData = { controle: c, cliente: cli, coords, status, cor: STATUS_COLOR[status] ?? '#c97c3a' }
           setPins(prev => [...prev, pin])
+          if (semCoords > 0) setNaoLoc(semCoords)
           await new Promise(r => setTimeout(r, 45))
         }
         setGeocoding(false)
       })
   }, [open])
+
+  // Sincroniza markers nativos + clustering + fitBounds quando pins mudam
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || pins.length === 0) return
+
+    const map = mapRef.current
+
+    // Limpa markers anteriores
+    markersRef.current.forEach(m => m.setMap(null))
+    clustererRef.current?.clearMarkers()
+
+    const bounds = new google.maps.LatLngBounds()
+    const newMarkers: google.maps.Marker[] = []
+
+    for (const pin of pins) {
+      const marker = new google.maps.Marker({
+        position: pin.coords,
+        icon: {
+          url: markerSVG(pin.cor),
+          scaledSize: new google.maps.Size(26, 26),
+        },
+        title: `${pin.controle.id_container} · ${pin.controle.cliente}`,
+      })
+
+      marker.addListener('click', () => {
+        // Fecha InfoWindow anterior
+        infoWindow?.close()
+
+        const iw = new google.maps.InfoWindow({
+          content: buildInfoWindowContent(pin),
+        })
+        iw.open({ map, anchor: marker })
+        setInfoWindow(iw)
+        setSelected(pin)
+
+        // Listeners dos botões no InfoWindow (via evento DOM)
+        google.maps.event.addListenerOnce(iw, 'domready', () => {
+          const btnDetalhes = document.getElementById(`iw-detalhes-${pin.controle.id}`)
+          const btnEnviar   = document.getElementById(`iw-enviar-${pin.controle.id}`)
+          btnDetalhes?.addEventListener('click', () => {
+            iw.close(); onSelectControle(pin.controle); fechar()
+          })
+          btnEnviar?.addEventListener('click', () => {
+            iw.close(); setModalEnvio(pin)
+          })
+        })
+      })
+
+      bounds.extend(pin.coords)
+      newMarkers.push(marker)
+    }
+
+    markersRef.current = newMarkers
+
+    // Clustering
+    if (!clustererRef.current) {
+      clustererRef.current = new MarkerClusterer({ map, markers: newMarkers })
+    } else {
+      clustererRef.current.addMarkers(newMarkers)
+    }
+
+    // fitBounds após geocoding terminar (não durante loading incremental)
+    if (!geocoding) {
+      if (pins.length === 1) {
+        map.setCenter(pins[0].coords)
+        map.setZoom(13)
+      } else if (pins.length > 1) {
+        map.fitBounds(bounds, 60)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pins, isLoaded, geocoding])
+
+  function buildInfoWindowContent(pin: PinData): string {
+    return `
+      <div style="background:#182818;color:#e8e0d0;padding:0.75rem 0.875rem;min-width:220px;font-family:Inter,sans-serif;font-size:0.8125rem;border-radius:4px;line-height:1.45">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.875rem;font-weight:700;color:${pin.cor};margin-bottom:0.25rem">
+          ${pin.controle.id_container}
+        </div>
+        <div style="font-weight:600;margin-bottom:0.2rem">${pin.controle.cliente}</div>
+        ${pin.cliente?.endereco ? `<div style="color:#8a9a8a;font-size:0.75rem">${pin.cliente.endereco}</div>` : ''}
+        ${pin.cliente?.bairro_cidade ? `<div style="color:#8a9a8a;font-size:0.75rem;margin-bottom:0.375rem">${pin.cliente.bairro_cidade}</div>` : ''}
+        <div style="display:inline-block;padding:0.1rem 0.45rem;border-radius:9999px;background:${pin.cor}25;color:${pin.cor};font-size:0.65rem;font-weight:700;margin-bottom:0.625rem">
+          ${pin.status}
+        </div>
+        <div style="display:flex;gap:0.375rem">
+          <button id="iw-detalhes-${pin.controle.id}" style="flex:1;background:#1e3a1e;color:#8a9a8a;border:1px solid #2d4a2d;border-radius:4px;padding:0.3rem 0.5rem;font-size:0.72rem;cursor:pointer">
+            Ver detalhes
+          </button>
+          <button id="iw-enviar-${pin.controle.id}" style="flex:1;background:#1e2e3a;color:#7a9a8a;border:1px solid #2d3a4a;border-radius:4px;padding:0.3rem 0.5rem;font-size:0.72rem;cursor:pointer">
+            📍 Enviar loc.
+          </button>
+        </div>
+      </div>
+    `
+  }
+
+  const estadosUnicos = useMemo(() => {
+    const set = new Set<string>()
+    pins.forEach(p => {
+      const bc = p.cliente?.bairro_cidade ?? ''
+      // Tenta extrair UF do padrão "Cidade - UF" ou "Cidade/UF"
+      const match = bc.match(/[-/]\s*([A-Z]{2})\s*$/)
+      if (match) set.add(match[1])
+      else if (bc) set.add('BR')
+    })
+    return set.size
+  }, [pins])
 
   const mapOptions = useMemo(() => ({
     styles: satelite ? [] : darkStyle,
@@ -155,7 +282,7 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
         <div className="map-drawer-head">
           <div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>
-              OPERAÇÃO · DISTRITO FEDERAL
+              OPERAÇÃO · BRASIL
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.375rem', fontWeight: 400, color: 'var(--fg)', lineHeight: 1.1 }}>
               Onde estão seus containers
@@ -197,58 +324,24 @@ export default function MapDrawer({ open, onClose, onSelectControle }: Props) {
             <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-soft)', minHeight: 0 }}>
               <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={BRASILIA}
-                zoom={11}
+                center={BRASIL_CENTER}
+                zoom={4}
                 options={mapOptions as object}
-              >
-                {pins.map(pin => (
-                  <Marker
-                    key={pin.controle.id}
-                    position={pin.coords}
-                    icon={{ url: markerSVG(pin.cor), scaledSize: { width: 22, height: 22 } as unknown as google.maps.Size }}
-                    onClick={() => setSelected(pin)}
-                  />
-                ))}
+                onLoad={map => { mapRef.current = map }}
+                onUnmount={() => { mapRef.current = null }}
+              />
 
-                {selected && (
-                  <InfoWindow position={selected.coords} onCloseClick={() => setSelected(null)}>
-                    <div style={{ background: '#182818', color: '#e8e0d0', padding: '0.75rem 0.875rem', minWidth: '210px', fontFamily: 'Inter, sans-serif', fontSize: '0.8125rem', borderRadius: '4px', lineHeight: 1.45 }}>
-                      <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.875rem', fontWeight: 700, color: selected.cor, marginBottom: '0.25rem' }}>
-                        {selected.controle.id_container}
-                      </div>
-                      <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>{selected.controle.cliente}</div>
-                      {selected.cliente?.endereco && (
-                        <div style={{ color: '#8a9a8a', fontSize: '0.75rem' }}>{selected.cliente.endereco}</div>
-                      )}
-                      {selected.cliente?.bairro_cidade && (
-                        <div style={{ color: '#8a9a8a', fontSize: '0.75rem', marginBottom: '0.375rem' }}>{selected.cliente.bairro_cidade}</div>
-                      )}
-                      <div style={{ display: 'inline-block', padding: '0.1rem 0.45rem', borderRadius: '9999px', background: `${selected.cor}25`, color: selected.cor, fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.625rem' }}>
-                        {selected.status}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.375rem' }}>
-                        <button
-                          onClick={() => { onSelectControle(selected.controle); fechar() }}
-                          style={{ flex: 1, background: '#1e3a1e', color: '#8a9a8a', border: '1px solid #2d4a2d', borderRadius: '4px', padding: '0.3rem 0.5rem', fontSize: '0.72rem', cursor: 'pointer' }}
-                        >
-                          Ver detalhes
-                        </button>
-                        <button
-                          onClick={() => setModalEnvio(selected)}
-                          style={{ flex: 1, background: '#1e2e3a', color: '#7a9a8a', border: '1px solid #2d3a4a', borderRadius: '4px', padding: '0.3rem 0.5rem', fontSize: '0.72rem', cursor: 'pointer' }}
-                        >
-                          📍 Enviar loc.
-                        </button>
-                      </div>
-                    </div>
-                  </InfoWindow>
-                )}
-              </GoogleMap>
+              {/* Aviso de endereços não localizados */}
+              {naoLocalizados > 0 && !geocoding && (
+                <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 10, background: 'hsl(22 68% 30% / 0.9)', border: '1px solid hsl(22 68% 52% / 0.4)', borderRadius: '9999px', padding: '0.25rem 0.75rem', fontSize: '0.65rem', color: 'hsl(22 68% 80%)', fontFamily: 'var(--font-mono)', backdropFilter: 'blur(8px)' }}>
+                  ⚠ {naoLocalizados} endereço{naoLocalizados > 1 ? 's' : ''} não localizado{naoLocalizados > 1 ? 's' : ''}
+                </div>
+              )}
 
               {/* Contador ao vivo */}
               <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, pointerEvents: 'none', background: 'hsl(145 14% 9% / 0.9)', backdropFilter: 'blur(8px)', border: '1px solid var(--border-soft)', borderRadius: '9999px', padding: '0.3rem 0.8rem', fontSize: '0.7rem', fontWeight: 600, color: 'var(--fg-2)', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-                {pins.length} CONTAINERS AO VIVO
+                {pins.length} CONTAINERS AO VIVO{estadosUnicos > 1 ? ` · ${estadosUnicos} ESTADOS` : ''}
               </div>
 
               {/* Legenda */}
