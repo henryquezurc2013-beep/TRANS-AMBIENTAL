@@ -36,8 +36,8 @@ export default function Atrasados() {
     const data = await db.controle.getEmAberto()
     setAtrasados(
       data
-        .filter(c => c.previsao_retirada < hj)
-        .sort((a, b) => a.previsao_retirada.localeCompare(b.previsao_retirada))
+        .filter(c => !c.container_fixo && c.previsao_retirada !== null && c.previsao_retirada < hj)
+        .sort((a, b) => a.previsao_retirada!.localeCompare(b.previsao_retirada!))
     )
     setLoading(false)
   }
@@ -104,7 +104,7 @@ export default function Atrasados() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {atrasados.map(c => {
-            const dias = diasAtraso(c.previsao_retirada)
+            const dias = diasAtraso(c.previsao_retirada!)
             const cor = corAtraso(dias)
             const estaEditando = editandoId === c.id
 
@@ -150,8 +150,8 @@ export default function Atrasados() {
                       </span>
                     ) : (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <span>Prev. {c.previsao_retirada.split('-').reverse().join('/')}</span>
-                        <button className="btn-ghost" style={{ padding: '0.125rem 0.3rem', lineHeight: 1 }} onClick={() => iniciarEdicao(c.id, c.previsao_retirada)} title="Editar previsão de retirada">
+                        <span>Prev. {c.previsao_retirada!.split('-').reverse().join('/')}</span>
+                        <button className="btn-ghost" style={{ padding: '0.125rem 0.3rem', lineHeight: 1 }} onClick={() => iniciarEdicao(c.id, c.previsao_retirada!)} title="Editar previsão de retirada">
                           <Icon name="pencil" size={11} />
                         </button>
                       </span>

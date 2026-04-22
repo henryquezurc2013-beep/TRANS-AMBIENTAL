@@ -207,6 +207,7 @@ export default function Dashboard() {
         material: trocaRegistro.material,
         observacao: '',
         origem_acao: 'TROCA RÁPIDA - NOVO CONTAINER NO CLIENTE',
+        container_fixo: trocaRegistro.container_fixo ?? false,
       })
       await db.containers.updateByIdContainer(trocaRetirar.trim(), {
         status_operacional: 'DISPONIVEL',
@@ -242,13 +243,13 @@ export default function Dashboard() {
   const manutCount  = containers.filter(c => c.status_operacional === 'MANUTENCAO').length
   const manutPend   = manutencoes.filter(m => m.status_manutencao === 'PENDENTE').length
   const manutAnd    = manutencoes.filter(m => m.status_manutencao === 'EM ANDAMENTO').length
-  const atrasados   = controles.filter(c => c.data_retirada === null && c.previsao_retirada < hoje)
+  const atrasados   = controles.filter(c => c.data_retirada === null && !c.container_fixo && c.previsao_retirada !== null && c.previsao_retirada < hoje)
 
-  const atr1a3 = atrasados.filter(c => { const d = diasAtraso(c.previsao_retirada); return d >= 1 && d <= 3 }).length
-  const atr4a7 = atrasados.filter(c => { const d = diasAtraso(c.previsao_retirada); return d >= 4 && d <= 7 }).length
-  const atr8p  = atrasados.filter(c => diasAtraso(c.previsao_retirada) >= 8).length
+  const atr1a3 = atrasados.filter(c => { const d = diasAtraso(c.previsao_retirada!); return d >= 1 && d <= 3 }).length
+  const atr4a7 = atrasados.filter(c => { const d = diasAtraso(c.previsao_retirada!); return d >= 4 && d <= 7 }).length
+  const atr8p  = atrasados.filter(c => diasAtraso(c.previsao_retirada!) >= 8).length
 
-  const emUsoNoPrazo = controles.filter(c => c.data_retirada === null && c.previsao_retirada >= hoje).length
+  const emUsoNoPrazo = controles.filter(c => c.data_retirada === null && c.previsao_retirada !== null && c.previsao_retirada >= hoje).length
 
   // Disponíveis por capacidade
   const dispByCap: Record<string, number> = {}
@@ -628,7 +629,7 @@ export default function Dashboard() {
             ) : (
               <div style={{ overflowY: 'auto', maxHeight: '320px' }}>
                 {atrasados.slice(0, 8).map((c, i) => {
-                  const dias = diasAtraso(c.previsao_retirada)
+                  const dias = diasAtraso(c.previsao_retirada!)
                   return (
                     <div key={c.id} style={{ padding: '0.625rem 0', borderBottom: i < Math.min(atrasados.length, 8) - 1 ? '1px solid var(--border-faint)' : 'none' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
@@ -636,7 +637,7 @@ export default function Dashboard() {
                           <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{c.id_container}</span>
                           <div style={{ fontSize: '0.8rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>{c.cliente}</div>
                           <div style={{ fontSize: '0.7rem', color: 'hsl(0,75%,65%)', marginTop: '0.1rem' }}>
-                            Previsto {fmtData(c.previsao_retirada)} · {dias}d atrasado
+                            Previsto {fmtData(c.previsao_retirada!)} · {dias}d atrasado
                           </div>
                         </div>
                         <button className="btn-primary" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', flexShrink: 0 }} onClick={() => navigate('/cadastro-rapido')}>

@@ -14,7 +14,8 @@ function fmtData(d: string | null) {
 
 function statusControle(r: IControle): string {
   if (r.data_retirada !== null) return 'DISPONIVEL'
-  if (r.previsao_retirada < hoje) return 'ATRASADO'
+  if (r.container_fixo) return 'FIXO'
+  if (r.previsao_retirada && r.previsao_retirada < hoje) return 'ATRASADO'
   return 'EM USO'
 }
 
@@ -125,7 +126,12 @@ export default function ControlePage() {
                     </td>
                     <td style={{ fontWeight: 500, color: 'var(--fg)' }}>{r.cliente}</td>
                     <td className="mono" style={{ color: 'var(--fg-3)', fontSize: '0.8rem' }}>{fmtData(r.data_entrega)}</td>
-                    <td className="mono" style={{ color: 'var(--fg-3)', fontSize: '0.8rem' }}>{fmtData(r.previsao_retirada)}</td>
+                    <td className="mono" style={{ color: 'var(--fg-3)', fontSize: '0.8rem' }}>
+                      {r.container_fixo
+                        ? <span style={{ padding: '0.15rem 0.45rem', borderRadius: '0.3rem', background: 'hsl(38,92%,60%)', color: '#000', fontSize: '0.7rem', fontWeight: 700 }}>Fixo</span>
+                        : fmtData(r.previsao_retirada)
+                      }
+                    </td>
                     <td><StatusBadge status={statusControle(r)} /></td>
                     <td style={{ color: 'var(--fg-muted)', fontSize: '0.8rem' }}>{r.material || '—'}</td>
                     <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{r.origem_acao || '—'}</td>

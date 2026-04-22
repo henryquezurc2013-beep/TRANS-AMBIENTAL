@@ -51,11 +51,12 @@ export interface Controle {
   contato_cliente: string
   telefone_cliente: string
   data_entrega: string
-  previsao_retirada: string
+  previsao_retirada: string | null
   data_retirada: string | null
   material: string
   observacao: string
   origem_acao: string
+  container_fixo: boolean
   created_at: string
 }
 

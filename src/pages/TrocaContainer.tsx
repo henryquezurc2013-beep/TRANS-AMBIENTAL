@@ -69,6 +69,7 @@ export default function TrocaContainer() {
         material: material || registroAntigo.material,
         observacao: obs,
         origem_acao: 'TROCA - NOVO CONTAINER NO CLIENTE',
+        container_fixo: registroAntigo.container_fixo ?? false,
       })
 
       // 3. Atualiza container antigo → DISPONIVEL

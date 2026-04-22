@@ -22,6 +22,7 @@ export default function CadastroRapido() {
   const [material, setMaterial] = useState('')
   const [dataEntrega, setDataEntrega] = useState(hoje())
   const [previsaoRetirada, setPrevisaoRetirada] = useState('')
+  const [containerFixo, setContainerFixo] = useState(false)
   const [obsEntrega, setObsEntrega] = useState('')
 
   // Form retirada
@@ -46,7 +47,7 @@ export default function CadastroRapido() {
 
   async function handleEntrega(e: FormEvent) {
     e.preventDefault()
-    if (!idContainer || !clienteNome || !dataEntrega || !previsaoRetirada) {
+    if (!idContainer || !clienteNome || !dataEntrega || (!containerFixo && !previsaoRetirada)) {
       toast('Preencha todos os campos obrigatórios', 'error')
       return
     }
@@ -63,11 +64,12 @@ export default function CadastroRapido() {
         contato_cliente: cliente?.contato ?? '',
         telefone_cliente: cliente?.telefone ?? '',
         data_entrega: dataEntrega,
-        previsao_retirada: previsaoRetirada,
+        previsao_retirada: containerFixo ? null : previsaoRetirada,
         data_retirada: null,
         material,
         observacao: obsEntrega,
         origem_acao: 'LANCADO POR APP',
+        container_fixo: containerFixo,
       })
 
       await db.containers.updateByIdContainer(idContainer, {
@@ -83,6 +85,7 @@ export default function CadastroRapido() {
       setMaterial('')
       setDataEntrega(hoje())
       setPrevisaoRetirada('')
+      setContainerFixo(false)
       setObsEntrega('')
       await carregar()
     } catch (err: unknown) {
@@ -182,22 +185,64 @@ export default function CadastroRapido() {
                 <input className="input-field" type="date" value={dataEntrega} onChange={e => setDataEntrega(e.target.value)} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Previsão de Retirada *</label>
-                <input className="input-field" type="date" value={previsaoRetirada} onChange={e => setPrevisaoRetirada(e.target.value)} required />
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  style={{ marginTop: '0.375rem', padding: '0.25rem 0.625rem', fontSize: '0.75rem', width: '100%' }}
-                  onClick={() => {
-                    const base = dataEntrega || hoje()
-                    const d = new Date(base + 'T00:00:00')
-                    d.setDate(d.getDate() + 30)
-                    setPrevisaoRetirada(d.toISOString().slice(0, 10))
-                  }}
-                >
-                  +30 dias
-                </button>
+                <label className="form-label" style={{ color: containerFixo ? 'var(--fg-muted)' : undefined }}>
+                  Previsão de Retirada {containerFixo ? '' : '*'}
+                </label>
+                <input
+                  className="input-field"
+                  type="date"
+                  value={containerFixo ? '' : previsaoRetirada}
+                  onChange={e => setPrevisaoRetirada(e.target.value)}
+                  disabled={containerFixo}
+                  required={!containerFixo}
+                  style={{ opacity: containerFixo ? 0.4 : 1, cursor: containerFixo ? 'not-allowed' : undefined }}
+                />
+                {!containerFixo && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ marginTop: '0.375rem', padding: '0.25rem 0.625rem', fontSize: '0.75rem', width: '100%' }}
+                    onClick={() => {
+                      const base = dataEntrega || hoje()
+                      const d = new Date(base + 'T00:00:00')
+                      d.setDate(d.getDate() + 30)
+                      setPrevisaoRetirada(d.toISOString().slice(0, 10))
+                    }}
+                  >
+                    +30 dias
+                  </button>
+                )}
               </div>
+            </div>
+
+            {/* Toggle Container Fixo */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '0.625rem',
+              padding: '0.625rem 0.875rem',
+              background: containerFixo ? 'hsl(38,92%,65%,0.1)' : 'var(--bg-soft)',
+              border: `1px solid ${containerFixo ? 'hsl(38,92%,65%,0.4)' : 'var(--border-soft)'}`,
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.15s',
+            }} onClick={() => { setContainerFixo(v => !v); if (!containerFixo) setPrevisaoRetirada('') }}>
+              <input
+                type="checkbox"
+                id="containerFixo"
+                checked={containerFixo}
+                onChange={() => { setContainerFixo(v => !v); if (!containerFixo) setPrevisaoRetirada('') }}
+                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'hsl(38,92%,50%)' }}
+                onClick={e => e.stopPropagation()}
+              />
+              <label htmlFor="containerFixo" style={{ margin: 0, fontSize: '0.875rem', cursor: 'pointer', fontWeight: 500 }}>
+                Container fixo (sem previsão de retirada)
+              </label>
+              {containerFixo && (
+                <span style={{
+                  marginLeft: 'auto', padding: '0.15rem 0.5rem', borderRadius: '0.3rem',
+                  background: 'hsl(38,92%,60%)', color: '#000', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.03em',
+                }}>FIXO</span>
+              )}
             </div>
 
             <div className="form-group">
