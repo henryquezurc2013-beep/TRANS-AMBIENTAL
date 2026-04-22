@@ -72,10 +72,9 @@ export default function TrocasPendentes() {
       if (error) throw error
 
       await registrarLog(
-        'TROCA APROVADA',
-        t.cacamba_retirada,
-        `Motorista: ${t.motorista_nome} · Cliente: ${t.cliente} · Entregue: ${t.cacamba_entregue}`,
         sessao?.usuarioAtual ?? 'admin',
+        'TROCA APROVADA',
+        `Motorista: ${t.motorista_nome} · Cliente: ${t.cliente} · Retirada: ${t.cacamba_retirada} · Entregue: ${t.cacamba_entregue}`,
       )
 
       toast(`Troca de ${t.motorista_nome} aprovada`, 'success')
