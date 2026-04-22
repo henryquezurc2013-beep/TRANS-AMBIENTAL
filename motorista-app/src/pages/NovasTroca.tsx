@@ -88,7 +88,6 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
 
     setEnviando(true)
     const { error } = await supabase.from('trocas_pendentes').insert({
-      motorista_id:     motoristaId,
       motorista_nome:   motoristaNome,
       cliente:          cliente.trim(),
       cacamba_retirada: cacambaRetirada.trim(),
