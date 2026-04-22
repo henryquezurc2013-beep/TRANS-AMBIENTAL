@@ -4,7 +4,7 @@ import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
-const formVazio = { nome_cliente: '', contato: '', telefone: '', endereco: '', bairro_cidade: '', cep: '', observacao: '' }
+const formVazio = { nome_cliente: '', contato: '', telefone: '', celular: '', endereco: '', bairro_cidade: '', cep: '', observacao: '' }
 
 export default function Clientes() {
   const { sessao } = useAuth()

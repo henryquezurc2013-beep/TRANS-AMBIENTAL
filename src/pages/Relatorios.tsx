@@ -85,6 +85,7 @@ export default function Relatorios() {
   ]
 
   return (
+    <>
     <div className="page-container">
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
@@ -225,5 +226,6 @@ export default function Relatorios() {
     </div>
 
     {modalMotorista && <RelatorioMotorista onClose={() => setModalMotorista(false)} />}
+    </>
   )
 }
