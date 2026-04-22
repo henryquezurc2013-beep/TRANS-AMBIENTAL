@@ -6,7 +6,21 @@ interface Props {
 
 const NUM_LINHAS = 15
 
-function gerarHtml(): string {
+async function carregarLogoBase64(): Promise<string> {
+  try {
+    const res  = await fetch('/logo.svg')
+    const blob = await res.blob()
+    return await new Promise<string>(resolve => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return ''
+  }
+}
+
+function gerarHtml(logoSrc: string): string {
   const linhas = Array.from({ length: NUM_LINHAS }, (_, i) => `
     <tr>
       <td class="cel-num">${i + 1}</td>
@@ -43,13 +57,9 @@ function gerarHtml(): string {
       padding-bottom: 10px;
       margin-bottom: 10px;
     }
-    .logo-box {
-      width: 62px; height: 62px; flex-shrink: 0;
-      border: 2px solid #000; border-radius: 6px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      font-size: 8px; font-weight: 900; text-align: center;
-      line-height: 1.15; letter-spacing: 0.04em;
+    .logo-img {
+      width: 70px; height: auto; flex-shrink: 0;
+      object-fit: contain;
     }
     .cab-titulo { flex: 1; text-align: center; }
     .cab-titulo h1 {
@@ -174,7 +184,7 @@ function gerarHtml(): string {
 
   <!-- CABEÇALHO -->
   <div class="cabecalho">
-    <div class="logo-box">TRANS<br>AMBIENTAL</div>
+    ${logoSrc ? `<img class="logo-img" src="${logoSrc}" alt="Trans Ambiental" />` : '<div style="width:70px"></div>'}
     <div class="cab-titulo">
       <h1>Trans Ambiental</h1>
       <h2>Controle de Caçamba · Folha de Rota</h2>
@@ -236,10 +246,11 @@ function gerarHtml(): string {
 }
 
 export default function RelatorioMotorista({ onClose }: Props) {
-  function abrir() {
+  async function abrir() {
+    const logoSrc = await carregarLogoBase64()
     const win = window.open('', '_blank', 'width=900,height=750')
     if (win) {
-      win.document.write(gerarHtml())
+      win.document.write(gerarHtml(logoSrc))
       win.document.close()
     }
     onClose()
