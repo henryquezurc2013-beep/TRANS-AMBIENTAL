@@ -38,6 +38,7 @@ export interface Cliente {
   telefone: string
   endereco: string
   bairro_cidade: string
+  cep: string
   observacao: string
   created_at: string
 }
@@ -147,11 +148,25 @@ export const db = {
       const existing = await supabase.from('clientes').select('id').ilike('nome_cliente', payload.nome_cliente).single()
       if (existing.data) throw new Error(`Cliente "${payload.nome_cliente}" já cadastrado`)
       const { error } = await supabase.from('clientes').insert(payload)
-      if (error) throw error
+      if (!error) return
+      if (error.message?.includes('column') || error.code === '42703') {
+        const { cep: _cep, ...base } = payload
+        const { error: e2 } = await supabase.from('clientes').insert(base)
+        if (e2) throw e2
+        return
+      }
+      throw error
     },
     async update(id: string, payload: Partial<Cliente>): Promise<void> {
       const { error } = await supabase.from('clientes').update(payload).eq('id', id)
-      if (error) throw error
+      if (!error) return
+      if (error.message?.includes('column') || error.code === '42703') {
+        const { cep: _cep, ...base } = payload
+        const { error: e2 } = await supabase.from('clientes').update(base).eq('id', id)
+        if (e2) throw e2
+        return
+      }
+      throw error
     },
     async delete(id: string): Promise<void> {
       const { error } = await supabase.from('clientes').delete().eq('id', id)

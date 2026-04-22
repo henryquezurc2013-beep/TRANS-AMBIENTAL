@@ -4,7 +4,7 @@ import Icon from '../components/Icon'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
-const formVazio = { nome_cliente: '', contato: '', telefone: '', endereco: '', bairro_cidade: '', observacao: '' }
+const formVazio = { nome_cliente: '', contato: '', telefone: '', endereco: '', bairro_cidade: '', cep: '', observacao: '' }
 
 export default function Clientes() {
   const { sessao } = useAuth()
@@ -59,7 +59,7 @@ export default function Clientes() {
     if (!form.nome_cliente.trim()) { toast('Nome do cliente é obrigatório', 'error'); return }
     setSalvando(true)
     try {
-      await db.clientes.add(form)
+      await db.clientes.add({ ...form, cep })
       await registrarLog(sessao!.usuarioAtual, 'CADASTRO CLIENTE', `Cliente "${form.nome_cliente}" cadastrado`)
       toast(`Cliente "${form.nome_cliente}" cadastrado!`, 'success')
       fecharModal(); await carregar()
@@ -87,7 +87,7 @@ export default function Clientes() {
 
   async function salvarEdicao(c: Cliente) {
     try {
-      await db.clientes.update(c.id, editForm)
+      await db.clientes.update(c.id, { ...editForm, cep: editCep })
       await registrarLog(sessao!.usuarioAtual, 'EDITAR CLIENTE', `Cliente "${c.nome_cliente}" atualizado`)
       toast('Cliente atualizado!', 'success')
       setEditandoId(null); await carregar()
@@ -199,7 +199,7 @@ export default function Clientes() {
                             onClick={() => {
                               setEditandoId(c.id)
                               setEditForm({ contato: c.contato, telefone: c.telefone, endereco: c.endereco, bairro_cidade: c.bairro_cidade, observacao: c.observacao })
-                              setEditCep(''); setEditErroCep('')
+                              setEditCep(c.cep ?? ''); setEditErroCep('')
                             }}
                           >
                             <Icon name="pencil" size={13} />
