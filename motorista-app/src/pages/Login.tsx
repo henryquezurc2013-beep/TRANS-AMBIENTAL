@@ -1,46 +1,45 @@
-import { useEffect, useState } from 'react'
-import { supabase, setSessao, type Motorista } from '../lib/supabase'
+import { useState } from 'react'
+import { supabase, setSessao } from '../lib/supabase'
 
 interface Props {
   onLogin: (id: string, nome: string) => void
 }
 
-const SENHA_PADRAO = '102030'
-
 export default function Login({ onLogin }: Props) {
-  const [motoristas, setMotoristas] = useState<Motorista[]>([])
-  const [selecionado, setSelecionado] = useState('')
-  const [senha, setSenha] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [erroCarregamento, setErroCarregamento] = useState('')
+  const [nome, setNome] = useState('')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
 
-  useEffect(() => {
-    supabase
+  async function entrar() {
+    const nomeTrimmed = nome.trim()
+    if (!nomeTrimmed) { setErro('Digite seu nome para continuar.'); return }
+
+    setEntrando(true)
+    setErro('')
+
+    const { data, error } = await supabase
       .from('motoristas')
       .select('*')
-      .order('nome')
-      .then(({ data, error }) => {
-        console.log('motoristas data:', data, 'error:', error)
-        if (error) {
-          setErroCarregamento(`Erro ao carregar: ${error.message}`)
-        } else if (!data || data.length === 0) {
-          setErroCarregamento('Nenhum motorista cadastrado no sistema.')
-        } else {
-          setMotoristas(data as Motorista[])
-        }
-        setLoading(false)
-      })
-  }, [])
+      .ilike('nome', nomeTrimmed)
+      .eq('ativo', true)
+      .maybeSingle()
 
-  function entrar() {
-    if (!selecionado) { setErro('Selecione seu nome para continuar.'); return }
-    if (senha !== SENHA_PADRAO) { setErro('Senha incorreta.'); return }
-    setEntrando(true)
-    const m = motoristas.find(m => m.id === selecionado)!
-    setSessao({ motorista_id: m.id, motorista_nome: m.nome })
-    onLogin(m.id, m.nome)
+    console.log('Login result:', data, error)
+
+    if (error) {
+      setErro(`Erro de conexão: ${error.message}`)
+      setEntrando(false)
+      return
+    }
+
+    if (!data) {
+      setErro('Usuário não encontrado.')
+      setEntrando(false)
+      return
+    }
+
+    setSessao({ motorista_id: data.id, motorista_nome: data.nome })
+    onLogin(data.id, data.nome)
   }
 
   return (
@@ -50,45 +49,26 @@ export default function Login({ onLogin }: Props) {
         <h1 style={s.titulo}>Área do Motorista</h1>
         <p style={s.sub}>Trans Ambiental · Controle de Caçambas</p>
 
-        {loading ? (
-          <div style={s.loading}>Carregando motoristas...</div>
-        ) : erroCarregamento ? (
-          <div style={s.erroCard}>{erroCarregamento}</div>
-        ) : (
-          <>
-            <label style={s.label}>Seu nome</label>
-            <select
-              style={s.select}
-              value={selecionado}
-              onChange={e => { setSelecionado(e.target.value); setErro('') }}
-            >
-              <option value="">— Selecione —</option>
-              {motoristas.map(m => (
-                <option key={m.id} value={m.id}>{m.nome}</option>
-              ))}
-            </select>
+        <label style={s.label}>Seu nome</label>
+        <input
+          style={s.input}
+          placeholder="Digite seu nome completo"
+          value={nome}
+          onChange={e => { setNome(e.target.value); setErro('') }}
+          onKeyDown={e => e.key === 'Enter' && entrar()}
+          autoComplete="off"
+          autoCapitalize="words"
+        />
 
-            <label style={s.label}>Senha</label>
-            <input
-              type="password"
-              style={{ ...s.select, marginBottom: '1.25rem' }}
-              placeholder="••••••"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErro('') }}
-              onKeyDown={e => e.key === 'Enter' && entrar()}
-            />
+        {erro && <p style={s.erro}>{erro}</p>}
 
-            {erro && <p style={s.erro}>{erro}</p>}
-
-            <button
-              style={{ ...s.btn, opacity: entrando ? 0.7 : 1 }}
-              onClick={entrar}
-              disabled={entrando}
-            >
-              {entrando ? 'Entrando...' : 'Entrar'}
-            </button>
-          </>
-        )}
+        <button
+          style={{ ...s.btn, opacity: entrando ? 0.7 : 1 }}
+          onClick={entrar}
+          disabled={entrando}
+        >
+          {entrando ? 'Verificando...' : 'Entrar'}
+        </button>
       </div>
     </div>
   )
@@ -113,7 +93,6 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0',
   },
   logo: {
     width: '90px',
@@ -143,7 +122,7 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
   },
-  select: {
+  input: {
     width: '100%',
     padding: '0.875rem 1rem',
     fontSize: '1rem',
@@ -152,7 +131,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.75rem',
     color: 'hsl(140 10% 85%)',
     marginBottom: '1.25rem',
-    appearance: 'auto',
+    boxSizing: 'border-box' as const,
   },
   btn: {
     width: '100%',
@@ -165,22 +144,6 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.75rem',
     cursor: 'pointer',
     letterSpacing: '0.03em',
-  },
-  loading: {
-    color: 'hsl(140 10% 50%)',
-    fontSize: '0.9rem',
-    padding: '1rem 0',
-  },
-  erroCard: {
-    background: 'hsl(0 50% 12%)',
-    border: '1px solid hsl(0 50% 25%)',
-    borderRadius: '0.75rem',
-    padding: '1rem',
-    color: 'hsl(0 70% 65%)',
-    fontSize: '0.85rem',
-    textAlign: 'center' as const,
-    width: '100%',
-    marginTop: '0.5rem',
   },
   erro: {
     color: 'hsl(0 70% 60%)',
