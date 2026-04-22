@@ -5,9 +5,12 @@ interface Props {
   onLogin: (id: string, nome: string) => void
 }
 
+const SENHA_PADRAO = '102030'
+
 export default function Login({ onLogin }: Props) {
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
   const [selecionado, setSelecionado] = useState('')
+  const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(true)
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
@@ -26,6 +29,7 @@ export default function Login({ onLogin }: Props) {
 
   function entrar() {
     if (!selecionado) { setErro('Selecione seu nome para continuar.'); return }
+    if (senha !== SENHA_PADRAO) { setErro('Senha incorreta.'); return }
     setEntrando(true)
     const m = motoristas.find(m => m.id === selecionado)!
     setSessao({ motorista_id: m.id, motorista_nome: m.nome })
@@ -54,6 +58,16 @@ export default function Login({ onLogin }: Props) {
                 <option key={m.id} value={m.id}>{m.nome}</option>
               ))}
             </select>
+
+            <label style={s.label}>Senha</label>
+            <input
+              type="password"
+              style={{ ...s.select, marginBottom: '1.25rem' }}
+              placeholder="••••••"
+              value={senha}
+              onChange={e => { setSenha(e.target.value); setErro('') }}
+              onKeyDown={e => e.key === 'Enter' && entrar()}
+            />
 
             {erro && <p style={s.erro}>{erro}</p>}
 
