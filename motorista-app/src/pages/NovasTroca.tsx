@@ -87,17 +87,22 @@ export default function NovasTroca({ motoristaId, motoristaNome, onLogout, onVer
     if (!cacambaEntregue.trim()) { setErro('Informe a caçamba entregue.'); return }
 
     setEnviando(true)
-    const { error } = await supabase.from('trocas_pendentes').insert({
+    const { data, error } = await supabase.from('trocas_pendentes').insert({
       motorista_nome:   motoristaNome,
       cliente:          cliente.trim(),
       cacamba_retirada: cacambaRetirada.trim(),
       cacamba_entregue: cacambaEntregue.trim(),
       observacao:       observacao.trim() || null,
       status:           'PENDENTE',
-    })
+    }).select()
     setEnviando(false)
 
-    if (error) { setErro('Erro ao enviar. Tente novamente.'); return }
+    if (error) {
+      alert('ERRO: ' + JSON.stringify(error))
+      setErro('Erro ao enviar. Tente novamente.')
+      return
+    }
+    alert('SUCESSO: ' + JSON.stringify(data))
     setTela('sucesso')
   }
 
