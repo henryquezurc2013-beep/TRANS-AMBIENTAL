@@ -7,6 +7,7 @@ import CommandPalette from './CommandPalette'
 import MapDrawer from './MapDrawer'
 import ContainerDrawer from './ContainerDrawer'
 import type { Controle } from '../services/dataService'
+import { supabase } from '../lib/supabase'
 
 const GRUPOS = [
   {
@@ -31,9 +32,10 @@ const GRUPOS = [
   {
     label: 'Gestão',
     itens: [
-      { path: '/clientes',   label: 'Clientes',   icon: 'users',  perm: 'Clientes'   },
-      { path: '/relatorios', label: 'Relatórios', icon: 'file',   perm: 'Relatorios' },
-      { path: '/logs',       label: 'Logs',       icon: 'scroll', perm: 'Logs'       },
+      { path: '/clientes',          label: 'Clientes',        icon: 'users',  perm: 'Clientes'        },
+      { path: '/relatorios',        label: 'Relatórios',      icon: 'file',   perm: 'Relatorios'      },
+      { path: '/logs',              label: 'Logs',            icon: 'scroll', perm: 'Logs'            },
+      { path: '/trocas-pendentes',  label: 'App Motoristas',  icon: 'bell',   perm: 'Trocas_Pendentes' },
     ],
   },
 ]
@@ -51,6 +53,7 @@ const PATH_LABELS: Record<string, string> = {
   '/lancamento-manutencao': 'Lançar Manut.',
   '/relatorios':            'Relatórios',
   '/logs':                  'Logs',
+  '/trocas-pendentes':      'App Motoristas',
 }
 
 function HorarioAtual() {
@@ -72,9 +75,10 @@ interface SidebarProps {
   nivelAtual:   string | undefined
   onCloseMobile: () => void
   onLogout: () => void
+  trocasPendentes: number
 }
 
-function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLogout }: SidebarProps) {
+function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLogout, trocasPendentes }: SidebarProps) {
   return (
     <div style={{
       width: '15rem', height: '100vh',
@@ -119,6 +123,11 @@ function Sidebar({ gruposVisiveis, usuarioAtual, nivelAtual, onCloseMobile, onLo
               >
                 <Icon name={item.icon} size={15} />
                 {item.label}
+                {item.path === '/trocas-pendentes' && trocasPendentes > 0 && (
+                  <span style={{ marginLeft: 'auto', background: 'hsl(0 70% 45%)', color: '#fff', fontSize: '0.6rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '9999px', lineHeight: 1.4 }}>
+                    {trocasPendentes}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
@@ -147,10 +156,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen,    setSidebarOpen]    = useState(false)
-  const [cpOpen,         setCpOpen]         = useState(false)
-  const [mapOpen,        setMapOpen]        = useState(false)
-  const [drawerControle, setDrawerControle] = useState<Controle | null>(null)
+  const [sidebarOpen,      setSidebarOpen]      = useState(false)
+  const [cpOpen,           setCpOpen]           = useState(false)
+  const [mapOpen,          setMapOpen]          = useState(false)
+  const [drawerControle,   setDrawerControle]   = useState<Controle | null>(null)
+  const [trocasPendentes,  setTrocasPendentes]  = useState(0)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -158,6 +168,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  useEffect(() => {
+    function buscarPendentes() {
+      supabase
+        .from('trocas_pendentes')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'PENDENTE')
+        .then(({ count }) => setTrocasPendentes(count ?? 0))
+    }
+    buscarPendentes()
+    const id = setInterval(buscarPendentes, 60000)
+    return () => clearInterval(id)
   }, [])
 
   async function handleLogout() {
@@ -184,6 +207,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           nivelAtual={sessao?.nivelAtual}
           onCloseMobile={() => {}}
           onLogout={handleLogout}
+          trocasPendentes={trocasPendentes}
         />
       </div>
 
@@ -205,6 +229,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           nivelAtual={sessao?.nivelAtual}
           onCloseMobile={() => setSidebarOpen(false)}
           onLogout={handleLogout}
+          trocasPendentes={trocasPendentes}
         />
       </div>
 

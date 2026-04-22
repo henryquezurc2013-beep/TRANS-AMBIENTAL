@@ -17,6 +17,7 @@ import Manutencao from './pages/Manutencao'
 import LancamentoManutencao from './pages/LancamentoManutencao'
 import Relatorios from './pages/Relatorios'
 import Logs from './pages/Logs'
+import TrocasPendentes from './pages/TrocasPendentes'
 
 function App() {
   return (
@@ -62,6 +63,9 @@ function App() {
             } />
             <Route path="/logs" element={
               <ProtectedRoute pagina="Logs"><Logs /></ProtectedRoute>
+            } />
+            <Route path="/trocas-pendentes" element={
+              <ProtectedRoute pagina="Trocas_Pendentes"><TrocasPendentes /></ProtectedRoute>
             } />
 
             <Route path="*" element={<Navigate to="/" replace />} />

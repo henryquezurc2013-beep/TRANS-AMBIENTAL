@@ -5,7 +5,7 @@ import { db, NivelUsuario, registrarLog } from '../services/dataService'
 
 const PERMISSOES: Record<NivelUsuario, string[]> = {
   ADMIN: ['*'],
-  OPERACAO: ['Dashboard', 'Cadastro_Rapido', 'Controle', 'Estoque', 'Atrasados', 'Cadastro_Containers', 'Cadastro_Container', 'Clientes', 'Cadastro_Cliente', 'Troca_Container'],
+  OPERACAO: ['Dashboard', 'Cadastro_Rapido', 'Controle', 'Estoque', 'Atrasados', 'Cadastro_Containers', 'Cadastro_Container', 'Clientes', 'Cadastro_Cliente', 'Troca_Container', 'Trocas_Pendentes'],
   MANUTENCAO: ['Dashboard', 'Manutencao', 'Lancamento_Manutencao', 'Estoque', 'Cadastro_Containers', 'Cadastro_Container', 'Logs'],
 }
 
