@@ -65,6 +65,7 @@ export default function NovaTrocaScreen({ navigation }: any) {
       container_entregue: containerEntregue,
       observacao: observacao.trim() || null,
       status: 'PENDENTE',
+      criado_em: new Date().toISOString(),
     })
     setEnviando(false)
     if (error) {

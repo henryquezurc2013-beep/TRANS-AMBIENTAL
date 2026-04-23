@@ -17,7 +17,7 @@ interface TrocaPendente {
   motivo_rejeicao: string | null
   aprovado_por: string | null
   aprovado_em: string | null
-  created_at: string
+  criado_em: string
 }
 
 type Filtro = 'PENDENTE' | 'APROVADO' | 'REJEITADO' | 'TODAS'
@@ -46,7 +46,7 @@ export default function TrocasPendentes() {
     const { data, error } = await supabase
       .from('trocas_pendentes')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('criado_em', { ascending: false })
     console.log('Trocas pendentes:', data, error)
     if (data) setTrocas(data as TrocaPendente[])
     setLoading(false)
@@ -215,7 +215,7 @@ export default function TrocasPendentes() {
                       <td style={{ ...td, fontWeight: 600, color: 'var(--fg)' }}>{t.cliente}</td>
                       <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(38 80% 60%)' }}>{t.container_retirado}</td>
                       <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(140 60% 55%)' }}>{t.container_entregue}</td>
-                      <td style={{ ...td, fontSize: '0.75rem', color: 'var(--fg-dim)', whiteSpace: 'nowrap' }}>{fmt(t.created_at)}</td>
+                      <td style={{ ...td, fontSize: '0.75rem', color: 'var(--fg-dim)', whiteSpace: 'nowrap' }}>{fmt(t.criado_em)}</td>
                       <td style={{ ...td, fontSize: '0.8rem', color: 'var(--fg-dim)', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {t.observacao || '—'}
                         {t.status === 'REJEITADO' && t.motivo_rejeicao && (
