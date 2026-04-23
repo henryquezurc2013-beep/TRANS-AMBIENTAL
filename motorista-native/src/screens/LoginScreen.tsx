@@ -13,7 +13,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 
-const SENHA_FIXA = 'trans2026'
+const SENHA_FIXA = '102030'
 
 type Motorista = { id: number; nome: string }
 
