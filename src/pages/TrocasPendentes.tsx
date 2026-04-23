@@ -47,7 +47,7 @@ export default function TrocasPendentes() {
       .from('trocas_pendentes')
       .select('*')
       .order('criado_em', { ascending: false })
-    console.log('Trocas pendentes:', data, error)
+    console.log('Dados:', data, 'Erro:', error)
     if (data) setTrocas(data as TrocaPendente[])
     setLoading(false)
   }
