@@ -10,8 +10,8 @@ interface TrocaPendente {
   motorista_id: string
   motorista_nome: string
   cliente: string
-  cacamba_retirada: string
-  cacamba_entregue: string
+  container_retirado: string
+  container_entregue: string
   observacao: string | null
   status: 'PENDENTE' | 'APROVADO' | 'REJEITADO'
   motivo_rejeicao: string | null
@@ -43,10 +43,11 @@ export default function TrocasPendentes() {
 
   async function carregar() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trocas_pendentes')
       .select('*')
       .order('created_at', { ascending: false })
+    console.log('Trocas pendentes:', data, error)
     if (data) setTrocas(data as TrocaPendente[])
     setLoading(false)
   }
@@ -74,7 +75,7 @@ export default function TrocasPendentes() {
       await registrarLog(
         sessao?.usuarioAtual ?? 'admin',
         'TROCA APROVADA',
-        `Motorista: ${t.motorista_nome} · Cliente: ${t.cliente} · Retirada: ${t.cacamba_retirada} · Entregue: ${t.cacamba_entregue}`,
+        `Motorista: ${t.motorista_nome} · Cliente: ${t.cliente} · Retirada: ${t.container_retirado} · Entregue: ${t.container_entregue}`,
       )
 
       toast(`Troca de ${t.motorista_nome} aprovada`, 'success')
@@ -212,8 +213,8 @@ export default function TrocasPendentes() {
                     <tr key={t.id} style={{ borderBottom: i < trocasFiltradas.length - 1 ? '1px solid var(--border-subtle)' : 'none', background: i % 2 === 1 ? 'hsl(145 14% 9%)' : 'transparent' }}>
                       <td style={td}>{t.motorista_nome}</td>
                       <td style={{ ...td, fontWeight: 600, color: 'var(--fg)' }}>{t.cliente}</td>
-                      <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(38 80% 60%)' }}>{t.cacamba_retirada}</td>
-                      <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(140 60% 55%)' }}>{t.cacamba_entregue}</td>
+                      <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(38 80% 60%)' }}>{t.container_retirado}</td>
+                      <td style={{ ...td, fontFamily: 'var(--font-mono)', color: 'hsl(140 60% 55%)' }}>{t.container_entregue}</td>
                       <td style={{ ...td, fontSize: '0.75rem', color: 'var(--fg-dim)', whiteSpace: 'nowrap' }}>{fmt(t.created_at)}</td>
                       <td style={{ ...td, fontSize: '0.8rem', color: 'var(--fg-dim)', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {t.observacao || '—'}
