@@ -236,3 +236,81 @@ export const db = {
     },
   },
 }
+
+// ─── Efetivar Troca de Container ─────────────────────────────────────────────
+// Troca um container em uso por outro disponível, no mesmo cliente.
+// Usada tanto pela tela de Troca Manual quanto pela aprovação de trocas do app.
+
+export interface EfetivarTrocaParams {
+  containerAntigo: string
+  containerNovo: string
+  dataTroca: string
+  material?: string
+  motivo?: string
+  observacao?: string
+  usuario: string
+}
+
+export async function efetivarTroca(p: EfetivarTrocaParams): Promise<{ cliente: string }> {
+  if (!p.containerAntigo || !p.containerNovo) {
+    throw new Error('Informe o container antigo e o novo')
+  }
+  if (p.containerAntigo === p.containerNovo) {
+    throw new Error('Container antigo e novo devem ser diferentes')
+  }
+
+  const abertos = await db.controle.getEmAberto()
+  const registroAntigo = abertos.find(r => r.id_container === p.containerAntigo)
+  if (!registroAntigo) {
+    throw new Error(`Container ${p.containerAntigo} não está em uso em nenhum cliente`)
+  }
+
+  const contNovo = await db.containers.getById(p.containerNovo)
+  if (!contNovo) {
+    throw new Error(`Container ${p.containerNovo} não encontrado no cadastro`)
+  }
+  if (contNovo.status_operacional !== 'DISPONIVEL') {
+    throw new Error(`Container ${p.containerNovo} não está disponível (status: ${contNovo.status_operacional})`)
+  }
+
+  const clienteNome = registroAntigo.cliente
+  const hojeISO = new Date().toISOString().slice(0, 10)
+
+  await db.controle.update(registroAntigo.id, {
+    data_retirada: p.dataTroca,
+    origem_acao: 'TROCA - RETORNOU AO PATIO',
+  })
+
+  await db.controle.add({
+    data_lancamento: hojeISO,
+    id_container: p.containerNovo,
+    tipo_container: contNovo.tipo_container,
+    cliente: clienteNome,
+    contato_cliente: registroAntigo.contato_cliente,
+    telefone_cliente: registroAntigo.telefone_cliente,
+    data_entrega: p.dataTroca,
+    previsao_retirada: registroAntigo.previsao_retirada,
+    data_retirada: null,
+    material: p.material || registroAntigo.material,
+    observacao: [p.motivo, p.observacao].filter(Boolean).join(' — '),
+    origem_acao: 'TROCA - NOVO CONTAINER NO CLIENTE',
+    container_fixo: registroAntigo.container_fixo ?? false,
+  })
+
+  await db.containers.updateByIdContainer(p.containerAntigo, {
+    status_operacional: 'DISPONIVEL',
+    liberado_para_entrega: 'SIM',
+  })
+  await db.containers.updateByIdContainer(p.containerNovo, {
+    status_operacional: 'EM USO',
+    liberado_para_entrega: 'NAO',
+  })
+
+  await registrarLog(
+    p.usuario,
+    'TROCA CONTAINER',
+    `Container ${p.containerAntigo} trocado por ${p.containerNovo} no cliente ${clienteNome}`,
+  )
+
+  return { cliente: clienteNome }
+}

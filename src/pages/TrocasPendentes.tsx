@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import AppLayout from '../components/AppLayout'
 import { supabase } from '../lib/supabase'
-import { registrarLog } from '../services/dataService'
+import { registrarLog, efetivarTroca } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -60,12 +60,23 @@ export default function TrocasPendentes() {
 
   async function aprovar(t: TrocaPendente) {
     setProcessando(t.id)
+    const usuario = sessao?.usuarioAtual ?? 'admin'
+
     try {
+      await efetivarTroca({
+        containerAntigo: t.container_retirado,
+        containerNovo: t.container_entregue,
+        dataTroca: new Date().toISOString().slice(0, 10),
+        motivo: `Troca aprovada do app — Motorista: ${t.motorista_nome}`,
+        observacao: t.observacao ?? undefined,
+        usuario,
+      })
+
       const { error } = await supabase
         .from('trocas_pendentes')
         .update({
           status: 'APROVADO',
-          aprovado_por: sessao?.usuarioAtual ?? 'admin',
+          aprovado_por: usuario,
           aprovado_em: new Date().toISOString(),
         })
         .eq('id', t.id)
@@ -73,15 +84,17 @@ export default function TrocasPendentes() {
       if (error) throw error
 
       await registrarLog(
-        sessao?.usuarioAtual ?? 'admin',
+        usuario,
         'TROCA APROVADA',
         `Motorista: ${t.motorista_nome} · Cliente: ${t.cliente} · Retirada: ${t.container_retirado} · Entregue: ${t.container_entregue}`,
       )
 
-      toast(`Troca de ${t.motorista_nome} aprovada`, 'success')
+      toast(`Troca de ${t.motorista_nome} aprovada e efetivada`, 'success')
       await carregar()
-    } catch {
-      toast('Erro ao aprovar troca', 'error')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao aprovar troca'
+      toast(msg, 'error')
+      console.error('Erro ao aprovar troca:', err)
     } finally {
       setProcessando(null)
     }
