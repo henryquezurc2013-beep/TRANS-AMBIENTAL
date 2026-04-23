@@ -13,7 +13,7 @@ function gerarHtml(logoSrc: string): string {
   const linhas = Array.from({ length: NUM_LINHAS }, (_, i) => `
     <tr>
       <td class="cel-num">${i + 1}</td>
-      <td class="cel"></td>
+      <td class="cel-data"></td>
       <td class="cel"></td>
       <td class="cel-cc"></td>
       <td class="cel-cc"></td>
@@ -95,7 +95,7 @@ function gerarHtml(logoSrc: string): string {
       text-transform: uppercase; letter-spacing: 0.05em;
       text-align: center; border: 1px solid #000;
     }
-    th.th-cliente, th.th-end { text-align: left; }
+    th.th-cliente { text-align: left; }
 
     tbody td {
       border: 1px solid #000;
@@ -103,7 +103,8 @@ function gerarHtml(logoSrc: string): string {
       vertical-align: top;
       padding: 3px 5px;
     }
-    .cel-num { width: 28px; text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
+    .cel-num  { width: 28px; text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
+    .cel-data { width: 88px; }
     .cel      { width: auto; }
     .cel-cc   { width: 88px; }
     .cel-ass  { width: 130px; }
@@ -198,8 +199,8 @@ function gerarHtml(logoSrc: string): string {
     <thead>
       <tr>
         <th style="width:28px">Nº</th>
-        <th class="th-cliente" style="width:22%">Cliente</th>
-        <th class="th-end">Endereço</th>
+        <th style="width:88px">Data</th>
+        <th class="th-cliente">Cliente</th>
         <th style="width:88px">Caçamba<br>Retirada</th>
         <th style="width:88px">Caçamba<br>Entregue</th>
         <th style="width:130px">Assinatura<br>do Cliente</th>
