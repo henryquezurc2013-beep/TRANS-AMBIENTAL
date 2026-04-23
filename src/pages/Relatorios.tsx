@@ -10,6 +10,14 @@ const CORES_PINTURA     = ['var(--primary)',  'var(--fg-muted)']
 
 type FiltroStatus = 'TODOS' | 'DISPONIVEL' | 'EM USO' | 'MANUTENCAO'
 
+type OrdemRelatorio =
+  | 'container_asc'
+  | 'container_desc'
+  | 'cliente_asc'
+  | 'cliente_desc'
+  | 'data_desc'
+  | 'data_asc'
+
 export default function Relatorios() {
   const { sessao } = useAuth()
   const [containers, setContainers]   = useState<Container[]>([])
@@ -19,6 +27,7 @@ export default function Relatorios() {
   const [busca, setBusca]                     = useState('')
   const [filtro, setFiltro]                   = useState<FiltroStatus>('TODOS')
   const [modalMotorista, setModalMotorista]   = useState(false)
+  const [ordem, setOrdem]                     = useState<OrdemRelatorio>('container_asc')
 
   useEffect(() => {
     async function carregar() {
@@ -71,6 +80,31 @@ export default function Relatorios() {
       c.local_patio.toLowerCase().includes(busca.toLowerCase()) ||
       c.capacidade.toLowerCase().includes(busca.toLowerCase())
     )
+
+  const filtradoOrdenado = [...filtrado].sort((a, b) => {
+    switch (ordem) {
+      case 'container_asc':
+        return a.numero_container.localeCompare(b.numero_container, 'pt-BR', { numeric: true })
+      case 'container_desc':
+        return b.numero_container.localeCompare(a.numero_container, 'pt-BR', { numeric: true })
+      case 'cliente_asc': {
+        const ca = controles.find(r => r.id_container === a.id_container)?.cliente ?? ''
+        const cb = controles.find(r => r.id_container === b.id_container)?.cliente ?? ''
+        return ca.localeCompare(cb, 'pt-BR')
+      }
+      case 'cliente_desc': {
+        const ca = controles.find(r => r.id_container === a.id_container)?.cliente ?? ''
+        const cb = controles.find(r => r.id_container === b.id_container)?.cliente ?? ''
+        return cb.localeCompare(ca, 'pt-BR')
+      }
+      case 'data_desc':
+        return new Date(b.data_cadastro ?? 0).getTime() - new Date(a.data_cadastro ?? 0).getTime()
+      case 'data_asc':
+        return new Date(a.data_cadastro ?? 0).getTime() - new Date(b.data_cadastro ?? 0).getTime()
+      default:
+        return 0
+    }
+  })
 
   const tooltipStyle = {
     contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontSize: '0.8125rem' },
@@ -170,7 +204,23 @@ export default function Relatorios() {
                   ))}
                 </div>
               </div>
-              <input className="input-field" style={{ maxWidth: '200px' }} placeholder="Buscar..." value={busca} onChange={e => setBusca(e.target.value)} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input className="input-field" style={{ maxWidth: '200px' }} placeholder="Buscar..." value={busca} onChange={e => setBusca(e.target.value)} />
+                <div className="form-group" style={{ minWidth: '200px', marginBottom: 0 }}>
+                  <select
+                    className="select-field"
+                    value={ordem}
+                    onChange={e => setOrdem(e.target.value as OrdemRelatorio)}
+                  >
+                    <option value="container_asc">Container ↑ (crescente)</option>
+                    <option value="container_desc">Container ↓ (decrescente)</option>
+                    <option value="cliente_asc">Cliente (A–Z)</option>
+                    <option value="cliente_desc">Cliente (Z–A)</option>
+                    <option value="data_desc">Data (mais recente)</option>
+                    <option value="data_asc">Data (mais antiga)</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div className="table-container">
@@ -188,7 +238,7 @@ export default function Relatorios() {
                         Nenhum container encontrado
                       </td>
                     </tr>
-                  ) : filtrado.map(c => {
+                  ) : filtradoOrdenado.map(c => {
                     const loc = localizacaoAtual(c)
                     return (
                       <tr key={c.id}>
@@ -218,7 +268,7 @@ export default function Relatorios() {
             </div>
 
             <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
-              {filtrado.length} container(s) exibido(s)
+              {filtradoOrdenado.length} container(s) exibido(s)
             </div>
           </div>
         </>
