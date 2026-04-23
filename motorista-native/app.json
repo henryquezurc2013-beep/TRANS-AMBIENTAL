@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Trans Ambiental",
+    "slug": "trans-ambiental-motorista",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d1a0d"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "br.com.transambientalcontainer.motorista"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d1a0d"
+      },
+      "package": "br.com.transambientalcontainer.motorista",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}
