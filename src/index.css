@@ -476,27 +476,28 @@
   .kpi-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--fg-muted);
+    color: var(--fg-dim);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     line-height: 1.3;
   }
 
   .kpi-value {
-    font: 600 1.875rem/1 var(--font-sans, 'Inter', system-ui, sans-serif);
+    font: 500 1.75rem/1 var(--font-sans, 'Inter', system-ui, sans-serif);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
     transition: color 0.18s;
+    margin-top: 0.5rem;
   }
 
   .kpi-unit {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 500;
     color: var(--fg-muted);
     margin-left: 3px;
   }
 
-  .kpi-delta            { font-size: 0.6875rem; font-weight: 500; color: var(--fg-muted); }
+  .kpi-delta            { font-size: 0.6875rem; font-weight: 400; color: var(--fg-muted); }
   .kpi-delta.up         { color: hsl(142,60%,55%); }
   .kpi-delta.down       { color: hsl(0,75%,65%); }
   .kpi-delta.flat       { color: var(--fg-muted); }
@@ -670,10 +671,10 @@
 }
 
 /* Stat card editorial */
-.stat-card { min-height: 170px; display: flex; flex-direction: column; padding: 1.75rem 1.5rem 1.5rem; }
-.stat-card .kpi-label { font: 500 .75rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
-.stat-card .kpi-value { font: 400 3.5rem/1 var(--font-display); letter-spacing: -0.03em; margin-top: auto; }
-.stat-card.is-secondary .kpi-value { font-size: 2rem; }
+.stat-card { min-height: 150px; display: flex; flex-direction: column; padding: 1.25rem 1.25rem 1.25rem; }
+.stat-card .kpi-label { font: 600 .75rem/1.3 var(--font-sans, 'Inter', system-ui, sans-serif); text-transform: uppercase; letter-spacing: .06em; color: var(--fg-dim); }
+.stat-card .kpi-value { font: 500 1.75rem/1 var(--font-sans, 'Inter', system-ui, sans-serif); letter-spacing: -0.02em; margin-top: 0.5rem; }
+.stat-card.is-secondary .kpi-value { font-size: 1.25rem; }
 .stat-card.is-secondary { min-height: 0; padding: 1rem 1.125rem; }
 
 /* Nav item copper rail */

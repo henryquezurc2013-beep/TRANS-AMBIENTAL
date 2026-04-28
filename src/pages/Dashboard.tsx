@@ -257,9 +257,10 @@ export default function Dashboard() {
   const topCap = Object.entries(dispByCap).sort((a, b) => b[1] - a[1]).slice(0, 3)
 
   // Clientes — novos este mês
-  const inicioMes    = new Date(); inicioMes.setDate(1)
-  const inicioMesStr = inicioMes.toISOString().slice(0, 10)
-  const clientesNovos = clientes.filter(c => c.created_at >= inicioMesStr).length
+  const inicioMes = new Date()
+  inicioMes.setDate(1)
+  inicioMes.setHours(0, 0, 0, 0)
+  const clientesNovos = clientes.filter(c => new Date(c.created_at) >= inicioMes).length
   const clientesRec   = clientes.length - clientesNovos
 
   // Entregas na última semana
@@ -356,7 +357,7 @@ export default function Dashboard() {
       value: clientes.length,
       icon: 'users',
       accent: 'hsl(260,60%,70%)',
-      delta: { dir: clientesNovos > 0 ? 'up' : 'flat', text: clientesNovos > 0 ? `+${clientesNovos} este mês` : 'sem novos' },
+      delta: { dir: clientesNovos > 0 ? 'up' : 'flat', text: clientesNovos > 0 ? `+${clientesNovos} novos este mês` : 'sem novos este mês' },
       trend: genTrend(6),
       breakdown: [
         { label: 'Novos (mês)',  value: clientesNovos },

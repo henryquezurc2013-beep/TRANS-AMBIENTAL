@@ -96,25 +96,43 @@ export default function StatCard({
         )}
       </div>
 
-      {/* Sparkline */}
+      {/* Sparkline + período */}
       {trend.length === 9 && (
-        <div className="sparkline" style={{ position: 'absolute', bottom: '0.375rem', right: '0.375rem' }}>
-          {trend.map((v, i) => (
-            <span
-              key={i}
-              onMouseEnter={e => { e.stopPropagation(); setHoveredBar(i) }}
-              onMouseLeave={e => { e.stopPropagation(); setHoveredBar(null) }}
-              style={{
-                display: 'block',
-                width: '6px',
-                height: `${Math.max(12, Math.round(v * 100))}%`,
-                background: accent,
-                borderRadius: '2px 2px 0 0',
-                opacity: hoveredBar === i ? 1 : i === 8 ? 0.7 : 0.25,
-                transition: 'opacity 0.15s',
-              }}
-            />
-          ))}
+        <div style={{
+          position: 'absolute',
+          bottom: '0.375rem',
+          right: '0.375rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '4px',
+        }}>
+          <div className="sparkline">
+            {trend.map((v, i) => (
+              <span
+                key={i}
+                onMouseEnter={e => { e.stopPropagation(); setHoveredBar(i) }}
+                onMouseLeave={e => { e.stopPropagation(); setHoveredBar(null) }}
+                style={{
+                  display: 'block',
+                  width: '6px',
+                  height: `${Math.max(12, Math.round(v * 100))}%`,
+                  background: accent,
+                  borderRadius: '2px 2px 0 0',
+                  opacity: hoveredBar === i ? 1 : i === 8 ? 0.7 : 0.25,
+                  transition: 'opacity 0.15s',
+                }}
+              />
+            ))}
+          </div>
+          <div style={{
+            fontSize: '9px',
+            color: 'var(--fg-dim)',
+            letterSpacing: '0.04em',
+            lineHeight: 1,
+          }}>
+            últimos {trend.length} dias
+          </div>
         </div>
       )}
 
