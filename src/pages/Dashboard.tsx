@@ -657,6 +657,8 @@ export default function Dashboard() {
                           fontSize: '0.8rem',
                           fontWeight: critico ? 700 : 500,
                           color: critico ? 'var(--fg)' : 'var(--fg-muted)',
+                          textTransform: critico ? 'uppercase' : 'none',
+                          letterSpacing: critico ? '0.04em' : 0,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>{l.acao}</div>
                         {l.detalhes && (
