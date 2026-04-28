@@ -18,7 +18,6 @@ function gerarHtml(logoSrc: string): string {
       <td class="cel-local"></td>
       <td class="cel-cc"></td>
       <td class="cel-cc"></td>
-      <td class="cel-ass"></td>
     </tr>
   `).join('')
 
@@ -104,12 +103,11 @@ function gerarHtml(logoSrc: string): string {
       vertical-align: top;
       padding: 3px 5px;
     }
-    .cel-num   { width: 4%;  text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
-    .cel-data  { width: 9%;  }
-    .cel       { width: 19%; }
-    .cel-local { width: 19%; }
-    .cel-cc    { width: 16%; }
-    .cel-ass   { width: 17%; }
+    .cel-num   { width: 5%;  text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
+    .cel-data  { width: 12%; }
+    .cel       { width: 25%; }
+    .cel-local { width: 22%; }
+    .cel-cc    { width: 18%; }
 
     /* ── Rodapé ── */
     .rodape { margin-top: 6px; }
@@ -200,13 +198,12 @@ function gerarHtml(logoSrc: string): string {
   <table>
     <thead>
       <tr>
-        <th style="width:4%">Nº</th>
-        <th style="width:9%">Data</th>
-        <th class="th-cliente" style="width:19%">Cliente</th>
-        <th class="th-cliente" style="width:19%">Local</th>
-        <th style="width:16%">Container<br>Retirou</th>
-        <th style="width:16%">Container<br>Deixou</th>
-        <th style="width:17%">Assinatura<br>do Cliente</th>
+        <th style="width:5%">Nº</th>
+        <th style="width:12%">Data</th>
+        <th class="th-cliente" style="width:25%">Cliente</th>
+        <th class="th-cliente" style="width:22%">Local</th>
+        <th style="width:18%">Container<br>Retirou</th>
+        <th style="width:18%">Container<br>Deixou</th>
       </tr>
     </thead>
     <tbody>
