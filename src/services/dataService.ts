@@ -140,7 +140,11 @@ export const db = {
         .select('*')
         .order('nome', { ascending: true })
       if (error) throw error
-      return data ?? []
+      // Coerção defensiva: aceita boolean, "true"/"false", "SIM"/"NAO" e null
+      return (data ?? []).map(m => ({
+        ...m,
+        ativo: m.ativo === true || m.ativo === 'true' || m.ativo === 'SIM',
+      }))
     },
 
     async add(payload: Omit<Motorista, 'id' | 'criado_em'>): Promise<void> {
