@@ -30,6 +30,173 @@ export default function Estoque() {
     carregar()
   }, [])
 
+  async function imprimirRelatorio() {
+    const [todosContainers, registrosAbertos] = await Promise.all([
+      db.containers.getAll(),
+      db.controle.getEmAberto(),
+    ])
+
+    const ordenados = [...todosContainers].sort((a, b) =>
+      (a.id_container ?? '').toString().localeCompare(
+        (b.id_container ?? '').toString(),
+        'pt-BR',
+        { numeric: true }
+      )
+    )
+
+    const total = ordenados.length
+    const emUso = ordenados.filter(c => (c.status_operacional ?? '').toUpperCase().includes('USO')).length
+    const disponiveis = ordenados.filter(c => (c.status_operacional ?? '').toUpperCase().includes('DISPON')).length
+    const manutencao = ordenados.filter(c => (c.status_operacional ?? '').toUpperCase().includes('MANUTEN')).length
+
+    const formatDate = (d: string | null | undefined) =>
+      d ? new Date(d).toLocaleDateString('pt-BR') : '—'
+
+    const linhas = ordenados.map(c => {
+      const ctrl = registrosAbertos.find(r => r.id_container === c.id_container)
+      const statusRaw = (c.status_operacional ?? '').toString().toUpperCase()
+      let statusKey = 'OUTRO'
+      if (statusRaw.includes('USO')) statusKey = 'EMUSO'
+      else if (statusRaw.includes('DISPON')) statusKey = 'DISPONIVEL'
+      else if (statusRaw.includes('MANUTEN')) statusKey = 'MANUTENCAO'
+
+      return `
+        <tr>
+          <td class="num">${c.id_container ?? '-'}</td>
+          <td>${c.tipo_container ?? '-'}</td>
+          <td><span class="status status-${statusKey}">${c.status_operacional ?? '-'}</span></td>
+          <td>${ctrl?.cliente ?? '—'}</td>
+          <td>${formatDate(ctrl?.data_entrega)}</td>
+          <td>${formatDate(ctrl?.previsao_retirada)}</td>
+          <td>${c.local_patio ?? '-'}</td>
+        </tr>
+      `
+    }).join('')
+
+    const dataAtual = new Date().toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Estoque — Trans Ambiental</title>
+<style>
+  @page { size: A4; margin: 1.4cm 1.2cm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; margin: 0; font-size: 11px; line-height: 1.4; }
+
+  .timbrado { display: flex; align-items: center; gap: 18px; padding-bottom: 12px; border-bottom: 3px solid #1F833D; margin-bottom: 16px; }
+  .timbrado img { height: 75px; width: auto; }
+  .timbrado .empresa { flex: 1; }
+  .timbrado h1 { margin: 0 0 2px; color: #1F833D; font-size: 22px; letter-spacing: 0.5px; font-weight: 700; }
+  .timbrado .razao { margin: 0 0 4px; font-size: 10px; color: #444; font-weight: 600; }
+  .timbrado .empresa p { margin: 1px 0; font-size: 10px; color: #555; }
+  .timbrado .cnpj { font-weight: 600; }
+
+  .titulo { text-align: center; margin: 16px 0 14px; }
+  .titulo h2 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+  .titulo p { margin: 4px 0 0; font-size: 10px; color: #666; }
+
+  .resumo { display: flex; gap: 8px; margin-bottom: 14px; }
+  .resumo .box { flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 8px 10px; text-align: center; }
+  .resumo .box .num { font-size: 20px; font-weight: 700; line-height: 1; }
+  .resumo .box .label { font-size: 9px; text-transform: uppercase; color: #666; letter-spacing: 0.5px; margin-top: 4px; }
+  .resumo .total .num { color: #1a1a1a; }
+  .resumo .uso   .num { color: #d97706; }
+  .resumo .disp  .num { color: #1F833D; }
+  .resumo .manut .num { color: #b91c1c; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #1F833D; color: white; }
+  thead tr { display: table-row; }
+  th { padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+  td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; font-size: 10px; }
+  tbody tr:nth-child(even) { background: #f8f8f8; }
+  td.num { font-family: 'Courier New', monospace; font-weight: 600; }
+
+  .status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-EMUSO       { background: #fef3c7; color: #92400e; }
+  .status-DISPONIVEL  { background: #dcfce7; color: #166534; }
+  .status-MANUTENCAO  { background: #fee2e2; color: #991b1b; }
+  .status-OUTRO       { background: #e5e7eb; color: #374151; }
+
+  .rodape { margin-top: 24px; border-top: 1px solid #ccc; padding-top: 10px; display: flex; justify-content: space-between; font-size: 9px; color: #666; }
+  .assinatura-box { margin-top: 60px; display: flex; justify-content: center; }
+  .assinatura { text-align: center; border-top: 1px solid #333; padding-top: 5px; width: 280px; font-size: 10px; color: #555; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    thead { display: table-header-group; }
+    .botoes-tela { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="timbrado">
+  <img src="${window.location.origin}/logo.svg" alt="Trans Ambiental">
+  <div class="empresa">
+    <h1>TRANS AMBIENTAL</h1>
+    <p class="razao">TRANS AMBIENTAL</p>
+    <p class="cnpj">CNPJ: 00.000.000/0000-00</p>
+    <p>[ENDEREÇO COMPLETO]</p>
+    <p>Luziânia / GO · Tel: [TELEFONE]</p>
+    <p>contato@transambientalcontainer.com.br · www.transambientalcontainer.com.br</p>
+  </div>
+</div>
+
+<div class="titulo">
+  <h2>Relatório de Estoque de Containers</h2>
+  <p>Emitido em ${dataAtual} · Posição completa do pátio</p>
+</div>
+
+<div class="resumo">
+  <div class="box total"><div class="num">${total}</div><div class="label">Total</div></div>
+  <div class="box uso"><div class="num">${emUso}</div><div class="label">Em Uso</div></div>
+  <div class="box disp"><div class="num">${disponiveis}</div><div class="label">Disponíveis</div></div>
+  <div class="box manut"><div class="num">${manutencao}</div><div class="label">Manutenção</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:9%">Nº Container</th>
+      <th style="width:11%">Tipo</th>
+      <th style="width:13%">Status</th>
+      <th style="width:30%">Cliente Atual</th>
+      <th style="width:13%">Data Entrega</th>
+      <th style="width:13%">Prev. Retirada</th>
+      <th style="width:11%">Pátio</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${linhas}
+  </tbody>
+</table>
+
+<div class="rodape">
+  <div>Trans Ambiental · Relatório de Estoque</div>
+  <div>Gerado em ${dataAtual}</div>
+</div>
+
+<div class="assinatura-box">
+  <div class="assinatura">Responsável pelo relatório</div>
+</div>
+
+</body>
+</html>`
+
+    const janela = window.open('', '_blank', 'width=1024,height=768')
+    if (!janela) return
+    janela.document.write(html)
+    janela.document.close()
+    janela.focus()
+    setTimeout(() => janela.print(), 400)
+  }
+
   const clienteAtual: Record<string, string> = {}
   controles.forEach(c => { clienteAtual[c.id_container] = c.cliente })
 
@@ -136,6 +303,25 @@ export default function Estoque() {
           ))}
         </div>
         <input className="input-field" style={{ maxWidth: '260px' }} placeholder="Buscar container ou cliente..." value={busca} onChange={e => setBusca(e.target.value)} />
+        <button
+          onClick={imprimirRelatorio}
+          style={{
+            marginLeft: 'auto',
+            padding: '0.5rem 1rem',
+            background: '#1F833D',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+          }}
+        >
+          🖨️ Imprimir Relatório
+        </button>
       </div>
 
       {loading ? (
