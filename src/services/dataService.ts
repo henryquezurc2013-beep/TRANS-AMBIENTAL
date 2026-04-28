@@ -13,6 +13,13 @@ export interface Usuario {
   created_at: string
 }
 
+export interface Motorista {
+  id: string
+  nome: string
+  ativo: boolean
+  criado_em: string
+}
+
 export interface Container {
   id: string
   id_container: string
@@ -122,6 +129,55 @@ export const db = {
     },
     async setAtivo(id: string, ativo: 'SIM' | 'NAO'): Promise<void> {
       const { error } = await supabase.from('usuarios').update({ ativo }).eq('id', id)
+      if (error) throw error
+    },
+  },
+
+  motoristas: {
+    async getAll(): Promise<Motorista[]> {
+      const { data, error } = await supabase
+        .from('motoristas')
+        .select('*')
+        .order('nome', { ascending: true })
+      if (error) throw error
+      return data ?? []
+    },
+
+    async add(payload: Omit<Motorista, 'id' | 'criado_em'>): Promise<void> {
+      const existente = await supabase
+        .from('motoristas')
+        .select('id')
+        .ilike('nome', payload.nome.trim())
+        .maybeSingle()
+
+      if (existente.data) {
+        throw new Error(`Já existe um motorista com o nome "${payload.nome}"`)
+      }
+
+      const { error } = await supabase.from('motoristas').insert({
+        nome: payload.nome.trim(),
+        ativo: payload.ativo,
+      })
+      if (error) throw error
+    },
+
+    async update(id: string, payload: Partial<Motorista>): Promise<void> {
+      const limpo: Partial<Motorista> = {}
+      if (payload.nome !== undefined) limpo.nome = payload.nome.trim()
+      if (payload.ativo !== undefined) limpo.ativo = payload.ativo
+
+      const { error } = await supabase
+        .from('motoristas')
+        .update(limpo)
+        .eq('id', id)
+      if (error) throw error
+    },
+
+    async setAtivo(id: string, ativo: boolean): Promise<void> {
+      const { error } = await supabase
+        .from('motoristas')
+        .update({ ativo })
+        .eq('id', id)
       if (error) throw error
     },
   },

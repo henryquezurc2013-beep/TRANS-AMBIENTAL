@@ -1,17 +1,17 @@
 import { useEffect, useState, FormEvent } from 'react'
-import { Plus, Pencil, Check, X, AlertTriangle, RefreshCw } from 'lucide-react'
-import { db, Usuario, registrarLog } from '../services/dataService'
+import { Plus, Pencil, Check, X, RefreshCw } from 'lucide-react'
+import { db, Motorista, registrarLog } from '../services/dataService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
 type StatusFiltro = 'ATIVOS' | 'INATIVOS' | 'TODOS'
 
-const formVazio = { usuario: '', senha: '', ativo: 'SIM' as 'SIM' | 'NAO' }
+const formVazio = { nome: '', ativo: true }
 
 export default function Motoristas() {
   const { sessao } = useAuth()
   const toast = useToast()
-  const [motoristas, setMotoristas] = useState<Usuario[]>([])
+  const [motoristas, setMotoristas] = useState<Motorista[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState<StatusFiltro>('ATIVOS')
   const [busca, setBusca] = useState('')
@@ -19,15 +19,13 @@ export default function Motoristas() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [salvando, setSalvando] = useState(false)
-  const [confirmacao, setConfirmacao] = useState<Usuario | null>(null)
-  const [processando, setProcessando] = useState(false)
 
   useEffect(() => { carregar() }, [])
 
   async function carregar() {
     setLoading(true)
     try {
-      const data = await db.usuarios.getMotoristas()
+      const data = await db.motoristas.getAll()
       setMotoristas(data)
     } catch {
       toast('Erro ao carregar motoristas', 'error')
@@ -41,9 +39,9 @@ export default function Motoristas() {
     setModalAberto(true)
   }
 
-  function abrirEdicao(m: Usuario) {
+  function abrirEdicao(m: Motorista) {
     setEditandoId(m.id)
-    setForm({ usuario: m.usuario, senha: '', ativo: m.ativo === 'SIM' ? 'SIM' : 'NAO' })
+    setForm({ nome: m.nome, ativo: m.ativo })
     setModalAberto(true)
   }
 
@@ -56,88 +54,70 @@ export default function Motoristas() {
 
   async function handleSalvar(e: FormEvent) {
     e.preventDefault()
-    const login = form.usuario.trim()
-    if (login.length < 4) { toast('Login deve ter pelo menos 4 caracteres', 'error'); return }
-    if (!/^[a-zA-Z0-9_-]+$/.test(login)) {
-      toast('Login só pode conter letras, números, _ e -', 'error'); return
-    }
-    if (!editandoId && form.senha.length < 4) {
-      toast('Senha deve ter pelo menos 4 caracteres', 'error'); return
-    }
-    if (editandoId && form.senha && form.senha.length < 4) {
-      toast('Nova senha deve ter pelo menos 4 caracteres', 'error'); return
-    }
+    const nome = form.nome.trim()
+    if (nome.length < 3) { toast('Nome deve ter pelo menos 3 caracteres', 'error'); return }
+    if (nome.length > 120) { toast('Nome não pode passar de 120 caracteres', 'error'); return }
 
     setSalvando(true)
     try {
       if (editandoId) {
-        const payload: Partial<Usuario> = { usuario: login, ativo: form.ativo }
-        if (form.senha) payload.senha = form.senha
-        await db.usuarios.update(editandoId, payload)
+        await db.motoristas.update(editandoId, { nome, ativo: form.ativo })
         await registrarLog(
           sessao!.usuarioAtual,
           'EDICAO MOTORISTA',
-          `Motorista "${login}" atualizado · ${form.ativo === 'SIM' ? 'ativo' : 'inativo'}`
+          `Motorista "${nome}" · ${form.ativo ? 'ativo' : 'inativo'}`
         )
-        toast(`Motorista "${login}" atualizado`, 'success')
+        toast(`Motorista "${nome}" atualizado`, 'success')
       } else {
-        await db.usuarios.add({
-          usuario: login,
-          senha: form.senha,
-          nivel: 'MOTORISTA',
-          ativo: form.ativo,
-        })
+        await db.motoristas.add({ nome, ativo: form.ativo })
         await registrarLog(
           sessao!.usuarioAtual,
           'CADASTRO MOTORISTA',
-          `Motorista "${login}" cadastrado · ${form.ativo === 'SIM' ? 'ativo' : 'inativo'}`
+          `Motorista "${nome}" cadastrado · ${form.ativo ? 'ativo' : 'inativo'}`
         )
-        toast(`Motorista "${login}" cadastrado!`, 'success')
+        toast(`Motorista "${nome}" cadastrado!`, 'success')
       }
       setModalAberto(false)
       setEditandoId(null)
       setForm(formVazio)
       await carregar()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar'
-      if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
-        toast('Já existe um usuário com esse login', 'error')
-      } else {
-        toast(msg, 'error')
-      }
+      toast(err instanceof Error ? err.message : 'Erro ao salvar', 'error')
     }
     setSalvando(false)
   }
 
-  async function handleAlterarStatus() {
-    if (!confirmacao) return
-    setProcessando(true)
-    const novoStatus: 'SIM' | 'NAO' = confirmacao.ativo === 'SIM' ? 'NAO' : 'SIM'
+  async function handleAlternarStatus(m: Motorista) {
+    const acao = m.ativo ? 'Inativar' : 'Reativar'
+    const aviso = m.ativo
+      ? `Inativar o motorista "${m.nome}"? Ele não conseguirá mais usar o app.`
+      : `Reativar o motorista "${m.nome}"? Ele voltará a poder usar o app.`
+    if (!window.confirm(aviso)) return
+
     try {
-      await db.usuarios.setAtivo(confirmacao.id, novoStatus)
+      await db.motoristas.setAtivo(m.id, !m.ativo)
       await registrarLog(
         sessao!.usuarioAtual,
-        novoStatus === 'NAO' ? 'INATIVAR MOTORISTA' : 'REATIVAR MOTORISTA',
-        `Motorista "${confirmacao.usuario}" ${novoStatus === 'NAO' ? 'inativado' : 'reativado'}`
+        m.ativo ? 'INATIVAR MOTORISTA' : 'REATIVAR MOTORISTA',
+        `Motorista "${m.nome}" ${m.ativo ? 'inativado' : 'reativado'}`
       )
-      toast(`Motorista ${novoStatus === 'NAO' ? 'inativado' : 'reativado'}`, 'success')
-      setConfirmacao(null)
+      toast(`Motorista ${m.ativo ? 'inativado' : 'reativado'}`, 'success')
       await carregar()
     } catch {
-      toast('Erro ao alterar status', 'error')
+      toast(`Erro ao ${acao.toLowerCase()} motorista`, 'error')
     }
-    setProcessando(false)
   }
 
   const filtrados = motoristas.filter(m => {
     const okFiltro = filtro === 'TODOS' ||
-      (filtro === 'ATIVOS' && m.ativo === 'SIM') ||
-      (filtro === 'INATIVOS' && m.ativo !== 'SIM')
-    const okBusca = !busca || m.usuario.toLowerCase().includes(busca.toLowerCase())
+      (filtro === 'ATIVOS' && m.ativo) ||
+      (filtro === 'INATIVOS' && !m.ativo)
+    const okBusca = !busca || m.nome.toLowerCase().includes(busca.toLowerCase())
     return okFiltro && okBusca
   })
 
-  const ativos = motoristas.filter(m => m.ativo === 'SIM').length
+  const total = motoristas.length
+  const ativos = motoristas.filter(m => m.ativo).length
 
   function fmtData(iso: string) {
     return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
@@ -150,11 +130,11 @@ export default function Motoristas() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
             <h1 className="page-title" style={{ margin: 0 }}>Motoristas</h1>
             <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-              {ativos} motorista{ativos !== 1 ? 's' : ''} ativo{ativos !== 1 ? 's' : ''}
+              {ativos} ativo{ativos !== 1 ? 's' : ''} · {total} total
             </span>
           </div>
           <p style={{ margin: 0, color: 'hsl(210,20%,50%)', fontSize: '0.875rem' }}>
-            Usuários do app de motoristas
+            Cadastro de motoristas que usam o app
           </p>
         </div>
         <button className="btn-primary" onClick={abrirNovo}>
@@ -190,7 +170,7 @@ export default function Motoristas() {
         <input
           className="input-field"
           style={{ maxWidth: '240px', marginLeft: 'auto' }}
-          placeholder="Buscar login..."
+          placeholder="Buscar por nome..."
           value={busca}
           onChange={e => setBusca(e.target.value)}
         />
@@ -198,9 +178,9 @@ export default function Motoristas() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)' }}>Carregando...</div>
-      ) : motoristas.length === 0 ? (
+      ) : filtrados.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(210,20%,50%)', lineHeight: 1.7 }}>
-          Nenhum motorista cadastrado ainda.<br />
+          Nenhum motorista encontrado.<br />
           <span style={{ fontSize: '0.85rem' }}>Clique em "+ Novo motorista" para começar.</span>
         </div>
       ) : (
@@ -208,29 +188,23 @@ export default function Motoristas() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Login</th>
+                <th>Nome</th>
                 <th>Status</th>
                 <th>Cadastrado em</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {filtrados.length === 0 ? (
-                <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'hsl(210,20%,40%)' }}>
-                    Nenhum motorista corresponde aos filtros
-                  </td>
-                </tr>
-              ) : filtrados.map(m => (
+              {filtrados.map(m => (
                 <tr key={m.id}>
-                  <td style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>{m.usuario}</td>
+                  <td style={{ fontWeight: 600 }}>{m.nome}</td>
                   <td>
-                    {m.ativo === 'SIM'
+                    {m.ativo
                       ? <span className="badge badge-success">Ativo</span>
-                      : <span className="badge badge-destructive">Inativo</span>
+                      : <span className="badge badge-muted">Inativo</span>
                     }
                   </td>
-                  <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,60%)' }}>{fmtData(m.created_at)}</td>
+                  <td style={{ fontSize: '0.8rem', color: 'hsl(210,20%,60%)' }}>{fmtData(m.criado_em)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button
@@ -242,11 +216,11 @@ export default function Motoristas() {
                         <Pencil size={13} />
                       </button>
                       <button
-                        className={m.ativo === 'SIM' ? 'btn-destructive' : 'btn-success'}
+                        className={m.ativo ? 'btn-destructive' : 'btn-success'}
                         style={{ padding: '0.25rem 0.625rem', fontSize: '0.72rem' }}
-                        onClick={() => setConfirmacao(m)}
+                        onClick={() => handleAlternarStatus(m)}
                       >
-                        {m.ativo === 'SIM' ? 'Inativar' : 'Reativar'}
+                        {m.ativo ? 'Inativar' : 'Reativar'}
                       </button>
                     </div>
                   </td>
@@ -257,7 +231,6 @@ export default function Motoristas() {
         </div>
       )}
 
-      {/* Modal — Novo / Editar */}
       {modalAberto && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) fecharModal() }}>
           <div className="modal-content" style={{ maxWidth: '460px' }}>
@@ -271,54 +244,38 @@ export default function Motoristas() {
             </div>
             <form onSubmit={handleSalvar} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               <div className="form-group">
-                <label className="form-label">Login *</label>
+                <label className="form-label">Nome *</label>
                 <input
                   className="input-field"
-                  placeholder="Ex: joao.silva"
-                  value={form.usuario}
-                  onChange={e => setForm(f => ({ ...f, usuario: e.target.value.replace(/\s/g, '') }))}
+                  placeholder="Nome completo do motorista"
+                  value={form.nome}
+                  onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
                   autoFocus
                   required
+                  maxLength={120}
                   disabled={salvando}
                 />
                 <span style={{ fontSize: '0.7rem', color: 'hsl(210,20%,50%)', marginTop: '0.25rem' }}>
-                  Mínimo 4 caracteres · letras, números, _ ou -
+                  Mínimo 3 caracteres · será exibido na lista do app
                 </span>
-              </div>
-              <div className="form-group">
-                <label className="form-label">{editandoId ? 'Nova senha' : 'Senha *'}</label>
-                <input
-                  className="input-field"
-                  type="password"
-                  placeholder={editandoId ? 'Deixe em branco para manter' : 'Mínimo 4 caracteres'}
-                  value={form.senha}
-                  onChange={e => setForm(f => ({ ...f, senha: e.target.value }))}
-                  required={!editandoId}
-                  disabled={salvando}
-                />
-                {editandoId && (
-                  <span style={{ fontSize: '0.7rem', color: 'hsl(210,20%,50%)', marginTop: '0.25rem' }}>
-                    Deixe em branco para manter a senha atual
-                  </span>
-                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Status</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
                     type="button"
-                    className={form.ativo === 'SIM' ? 'btn-primary' : 'btn-secondary'}
+                    className={form.ativo ? 'btn-primary' : 'btn-secondary'}
                     style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem', justifyContent: 'center' }}
-                    onClick={() => setForm(f => ({ ...f, ativo: 'SIM' }))}
+                    onClick={() => setForm(f => ({ ...f, ativo: true }))}
                     disabled={salvando}
                   >
                     Ativo
                   </button>
                   <button
                     type="button"
-                    className={form.ativo === 'NAO' ? 'btn-primary' : 'btn-secondary'}
+                    className={!form.ativo ? 'btn-primary' : 'btn-secondary'}
                     style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem', justifyContent: 'center' }}
-                    onClick={() => setForm(f => ({ ...f, ativo: 'NAO' }))}
+                    onClick={() => setForm(f => ({ ...f, ativo: false }))}
                     disabled={salvando}
                   >
                     Inativo
@@ -334,54 +291,6 @@ export default function Motoristas() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal — Confirmar inativar/reativar */}
-      {confirmacao && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget && !processando) setConfirmacao(null) }}>
-          <div className="modal-content" style={{ maxWidth: '420px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
-              <div style={{
-                width: '2.5rem', height: '2.5rem', flexShrink: 0,
-                background: confirmacao.ativo === 'SIM' ? 'hsl(0 84% 60% / 0.12)' : 'hsl(142 60% 45% / 0.12)',
-                border: `1px solid ${confirmacao.ativo === 'SIM' ? 'hsl(0 84% 60% / 0.3)' : 'hsl(142 60% 45% / 0.3)'}`,
-                borderRadius: '0.625rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <AlertTriangle
-                  size={18}
-                  color={confirmacao.ativo === 'SIM' ? 'hsl(0,84%,60%)' : 'hsl(142,60%,55%)'}
-                />
-              </div>
-              <div>
-                <h2 style={{ margin: '0 0 0.375rem', fontSize: '1rem', fontWeight: 600 }}>
-                  {confirmacao.ativo === 'SIM' ? 'Inativar motorista' : 'Reativar motorista'}
-                </h2>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(210,20%,60%)', lineHeight: 1.5 }}>
-                  {confirmacao.ativo === 'SIM' ? (
-                    <>O motorista <strong style={{ color: 'hsl(210,20%,90%)' }}>{confirmacao.usuario}</strong> não poderá mais entrar no app. O cadastro será mantido para histórico.</>
-                  ) : (
-                    <>O motorista <strong style={{ color: 'hsl(210,20%,90%)' }}>{confirmacao.usuario}</strong> voltará a poder usar o app.</>
-                  )}
-                </p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn-secondary" disabled={processando} onClick={() => setConfirmacao(null)}>
-                Cancelar
-              </button>
-              <button
-                className={confirmacao.ativo === 'SIM' ? 'btn-destructive' : 'btn-success'}
-                disabled={processando}
-                onClick={handleAlterarStatus}
-              >
-                {processando
-                  ? 'Processando...'
-                  : confirmacao.ativo === 'SIM' ? 'Inativar' : 'Reativar'}
-              </button>
-            </div>
           </div>
         </div>
       )}
