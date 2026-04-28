@@ -6,7 +6,30 @@
       "Bash(npx --yes tailwindcss init -p)",
       "Bash(npm run *)",
       "Bash(gh workflow *)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(cat public/.htaccess)",
+      "Bash(cat .htaccess)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s \"https://api.github.com/repos/henryquezurc2013-beep/TRANS-AMBIENTAL/actions/runs?per_page=3\")",
+      "Bash(curl -s \"https://api.github.com/repos/henryquezurc2013-beep/TRANS-AMBIENTAL/actions/runs?per_page=5\")",
+      "Bash(cat .github/workflows/*.yml)",
+      "Bash(ls .github/workflows/)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(git ls-tree *)",
+      "Bash(git ls-remote *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(npx create-expo-app *)",
+      "Bash(npx expo *)",
+      "Bash(mkdir -p \"c:/Users/BIRU-BIRU/Desktop/Controle CAÇAMBA/motorista-native/src/lib\")",
+      "Bash(mkdir -p \"c:/Users/BIRU-BIRU/Desktop/Controle CAÇAMBA/motorista-native/src/screens\")",
+      "Bash(eas --version)",
+      "Bash(eas build *)",
+      "Bash(git rm *)",
+      "Bash(rm app.json)"
     ]
   }
 }

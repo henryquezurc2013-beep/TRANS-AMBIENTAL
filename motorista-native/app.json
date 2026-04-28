@@ -2,26 +2,30 @@
   "expo": {
     "name": "Trans Ambiental",
     "slug": "trans-ambiental-motorista",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0d1a0d"
+      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "br.com.transambientalcontainer.motorista"
+      "bundleIdentifier": "com.transambiental.motorista"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0d1a0d"
+        "backgroundColor": "#ffffff"
       },
-      "package": "br.com.transambientalcontainer.motorista",
+      "package": "com.transambiental.motorista",
+      "versionCode": 2,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -30,6 +34,11 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8a23aa12-df6a-45f6-8fa5-374b1af48d02"
+      }
+    }
   }
 }

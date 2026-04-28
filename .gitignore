@@ -23,3 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Arquivos do app que devem ficar APENAS em motorista-native/
+/app.json
+/eas.json
