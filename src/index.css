@@ -534,11 +534,72 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* ── Top clientes (mini bar chart) ───────────────────────────────────────── */
+  .cliente-row { margin-bottom: 0.625rem; }
+  .cliente-row:last-child { margin-bottom: 0; }
+  .cliente-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 4px;
+  }
+  .cliente-nome {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80%;
+  }
+  .cliente-num {
+    font: 700 0.75rem/1 var(--font-mono, 'JetBrains Mono', monospace);
+    color: hsl(38, 80%, 60%);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .cliente-barra-bg {
+    height: 4px;
+    background: hsl(145, 14%, 13%);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .cliente-barra-fill {
+    height: 100%;
+    background: linear-gradient(90deg, hsl(38, 80%, 60%), hsl(22, 70%, 55%));
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Botão "Resolver" outline ────────────────────────────────────────────── */
+  .btn-resolver-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    background: transparent;
+    border: 1px solid hsl(22, 70%, 60%);
+    border-radius: 0.375rem;
+    color: hsl(22, 80%, 65%);
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+  }
+  .btn-resolver-outline:hover {
+    background: hsl(22, 70%, 55%);
+    color: #fff;
+    border-color: hsl(22, 70%, 55%);
+  }
+
   /* ── Segmented control ───────────────────────────────────────────────────── */
   .seg {
     display: flex;
-    background: hsl(222, 37%, 10%);
-    border: 1px solid hsl(220, 25%, 18%);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
     border-radius: 0.5rem;
     padding: 3px;
     gap: 2px;
@@ -549,18 +610,18 @@
     border-radius: 6px;
     font: 500 0.8125rem/1 var(--font-sans, 'Inter', system-ui, sans-serif);
     cursor: pointer;
-    color: hsl(210,20%,55%);
+    color: hsl(210,20%,60%);
     background: transparent;
-    transition: all 0.15s;
+    transition: background 0.15s, color 0.15s;
   }
   .seg button.on {
-    background: hsl(222, 37%, 20%);
+    background: var(--card-2);
     color: hsl(210, 20%, 92%);
     box-shadow: none;
   }
   .seg button:hover:not(.on) {
     color: hsl(210,20%,85%);
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
   }
 
   /* ── Page subtitle ───────────────────────────────────────────────────────── */

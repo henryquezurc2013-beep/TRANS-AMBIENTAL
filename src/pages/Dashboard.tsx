@@ -46,6 +46,10 @@ function corLog(acao: string): string {
   return 'var(--fg-muted)'
 }
 
+function isLogCritico(acao: string): boolean {
+  return acao.includes('ENTREGA') || acao.includes('TROCA')
+}
+
 function genTrend(seed: number): number[] {
   return Array.from({ length: 9 }, (_, i) => {
     const v = ((seed * 31 + i * 17 + i * i * 7) % 70) / 100 + 0.2
@@ -602,15 +606,15 @@ export default function Dashboard() {
             {topClientes.length === 0 ? (
               <div style={{ color: 'var(--fg-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>Sem dados no período</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+              <div>
                 {topClientes.map(c => (
-                  <div key={c.nome}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>{c.nome}</span>
-                      <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', flexShrink: 0 }}>{c.total}</span>
+                  <div key={c.nome} className="cliente-row">
+                    <div className="cliente-info">
+                      <span className="cliente-nome">{c.nome}</span>
+                      <span className="cliente-num">{c.total}</span>
                     </div>
-                    <div style={{ height: '3px', background: 'var(--card-2)', borderRadius: '2px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${(c.total / maxCli) * 100}%`, background: 'var(--primary)', borderRadius: '2px', transition: 'width 0.4s' }} />
+                    <div className="cliente-barra-bg">
+                      <div className="cliente-barra-fill" style={{ width: `${(c.total / maxCli) * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -648,7 +652,7 @@ export default function Dashboard() {
                             Previsto {fmtData(c.previsao_retirada!)} · {dias}d atrasado
                           </div>
                         </div>
-                        <button className="btn-primary" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', flexShrink: 0 }} onClick={() => navigate('/cadastro-rapido')}>
+                        <button className="btn-resolver-outline" onClick={() => navigate('/cadastro-rapido')}>
                           Resolver →
                         </button>
                       </div>
@@ -681,11 +685,26 @@ export default function Dashboard() {
               <div style={{ overflowY: 'auto', maxHeight: '320px' }}>
                 {logs.map((l, i) => {
                   const cor = corLog(l.acao)
+                  const critico = isLogCritico(l.acao)
                   return (
                     <div key={l.id ?? i} className="activity-row">
-                      <span className="activity-dot" style={{ background: cor }} />
+                      <span
+                        className="activity-dot"
+                        style={{
+                          background: cor,
+                          width: critico ? '8px' : '5px',
+                          height: critico ? '8px' : '5px',
+                          opacity: critico ? 1 : 0.55,
+                          marginTop: critico ? '4px' : '5px',
+                        }}
+                      />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.acao}</div>
+                        <div style={{
+                          fontSize: '0.8rem',
+                          fontWeight: critico ? 700 : 500,
+                          color: critico ? 'var(--fg)' : 'var(--fg-muted)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>{l.acao}</div>
                         {l.detalhes && (
                           <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.detalhes}</div>
                         )}
