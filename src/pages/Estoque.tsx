@@ -62,6 +62,7 @@ export default function Estoque() {
 
       return `
         <tr>
+          <td style="text-align:center;"><span class="checkbox"></span></td>
           <td class="num">${c.id_container ?? '-'}</td>
           <td>${c.tipo_container ?? '-'}</td>
           <td><span class="status status-${statusKey}">${c.status_operacional ?? '-'}</span></td>
@@ -116,6 +117,7 @@ export default function Estoque() {
   td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #e5e5e5; font-size: 10px; }
   tbody tr:nth-child(even) { background: #f8f8f8; }
   td.num { font-family: 'Courier New', monospace; font-weight: 600; }
+  .checkbox { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #1a1a1a; border-radius: 2px; vertical-align: middle; }
 
   .status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
   .status-EMUSO       { background: #fef3c7; color: #92400e; }
@@ -163,13 +165,14 @@ export default function Estoque() {
 <table>
   <thead>
     <tr>
-      <th style="width:9%">Nº Container</th>
-      <th style="width:11%">Tipo</th>
-      <th style="width:13%">Status</th>
-      <th style="width:30%">Cliente Atual</th>
-      <th style="width:13%">Data Entrega</th>
-      <th style="width:13%">Prev. Retirada</th>
-      <th style="width:11%">Pátio</th>
+      <th style="width:6%; text-align:center;">Confer.</th>
+      <th style="width:8%">Nº Container</th>
+      <th style="width:10%">Tipo</th>
+      <th style="width:12%">Status</th>
+      <th style="width:28%">Cliente Atual</th>
+      <th style="width:12%">Data Entrega</th>
+      <th style="width:12%">Prev. Retirada</th>
+      <th style="width:12%">Pátio</th>
     </tr>
   </thead>
   <tbody>
