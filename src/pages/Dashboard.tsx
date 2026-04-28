@@ -57,20 +57,6 @@ function genTrend(seed: number): number[] {
   })
 }
 
-// HoraAtual component
-function HoraAtual() {
-  const fmt = () => {
-    const d = new Date()
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-  }
-  const [hora, setHora] = useState(fmt)
-  useEffect(() => {
-    const id = setInterval(() => setHora(fmt()), 30000)
-    return () => clearInterval(id)
-  }, [])
-  return <>{hora}</>
-}
-
 type Periodo = 'hoje' | '7d' | '30d' | 'ano'
 
 const hoje = new Date().toISOString().slice(0, 10)
@@ -81,6 +67,11 @@ export default function Dashboard() {
   const navigate   = useNavigate()
   const toast      = useToast()
   const { sessao } = useAuth()
+
+  const primeiroNome = (sessao?.usuarioAtual ?? 'Operador')
+    .split(/\s+/)[0]
+    .toLowerCase()
+    .replace(/^./, c => c.toUpperCase())
 
   const [containers,  setContainers]  = useState<Container[]>([])
   const [clientes,    setClientes]    = useState<Cliente[]>([])
@@ -412,51 +403,13 @@ export default function Dashboard() {
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div style={{ padding: '1.125rem 2rem 0', borderBottom: '1px solid var(--border-subtle)' }}>
 
-        {/* Linha 1: breadcrumb + sistema + busca + sino */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.875rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', color: 'var(--fg-muted)' }}>
-            <span>Trans Ambiental</span>
-            <span style={{ opacity: 0.4 }}>/</span>
-            <span style={{ color: 'var(--fg)', fontWeight: 600 }}>Dashboard</span>
-          </div>
-
-          <div style={{ width: '1px', height: '14px', background: 'var(--border)', flexShrink: 0 }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--fg-muted)' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px var(--success)', display: 'inline-block', flexShrink: 0 }} />
-            <span>Sistema online · Sincronizado <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg)' }}><HoraAtual /></span></span>
-          </div>
-
-          <div style={{ flex: 1 }} />
-
-          <div style={{ position: 'relative' }}>
-            <Icon name="search" size={12} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-muted)', pointerEvents: 'none' }} />
-            <input
-              className="input-field"
-              style={{ paddingLeft: '2rem', paddingRight: '2.5rem', width: '210px', height: '32px', fontSize: '0.78rem' }}
-              placeholder="Buscar container, cliente..."
-            />
-            <kbd style={{
-              position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
-              fontSize: '0.62rem', color: 'var(--fg-muted)',
-              background: 'var(--card-2)', border: '1px solid var(--border)',
-              borderRadius: '0.25rem', padding: '0.1rem 0.3rem', pointerEvents: 'none',
-            }}>⌘K</kbd>
-          </div>
-
-          <button className="btn-ghost" style={{ padding: '0.375rem', position: 'relative' }}>
-            <Icon name="bell" size={15} />
-            <span style={{ position: 'absolute', top: '3px', right: '3px', width: '7px', height: '7px', borderRadius: '50%', background: 'var(--destructive)', border: '1.5px solid var(--bg)' }} />
-          </button>
-        </div>
-
-        {/* Linha 2: saudação + data + action bar */}
+        {/* Saudação + data + action bar */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
               <Icon name={saudIcone} size={17} color={saudCor} style={{ flexShrink: 0 }} />
               <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--fg)', lineHeight: 1.2 }}>
-                {saudTxt}, {sessao?.usuarioAtual}
+                {saudTxt}, {primeiroNome}
               </h1>
               <span className="badge badge-info" style={{ fontSize: '0.68rem' }}>● {sessao?.nivelAtual ?? 'Admin'}</span>
             </div>
