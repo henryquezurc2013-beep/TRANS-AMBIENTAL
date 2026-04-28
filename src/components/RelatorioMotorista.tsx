@@ -15,6 +15,7 @@ function gerarHtml(logoSrc: string): string {
       <td class="cel-num">${i + 1}</td>
       <td class="cel-data"></td>
       <td class="cel"></td>
+      <td class="cel-local"></td>
       <td class="cel-cc"></td>
       <td class="cel-cc"></td>
       <td class="cel-ass"></td>
@@ -103,11 +104,12 @@ function gerarHtml(logoSrc: string): string {
       vertical-align: top;
       padding: 3px 5px;
     }
-    .cel-num  { width: 28px; text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
-    .cel-data { width: 88px; }
-    .cel      { width: auto; }
-    .cel-cc   { width: 88px; }
-    .cel-ass  { width: 130px; }
+    .cel-num   { width: 4%;  text-align: center; font-weight: 700; font-size: 10px; vertical-align: middle; }
+    .cel-data  { width: 9%;  }
+    .cel       { width: 19%; }
+    .cel-local { width: 19%; }
+    .cel-cc    { width: 16%; }
+    .cel-ass   { width: 17%; }
 
     /* ── Rodapé ── */
     .rodape { margin-top: 6px; }
@@ -198,12 +200,13 @@ function gerarHtml(logoSrc: string): string {
   <table>
     <thead>
       <tr>
-        <th style="width:28px">Nº</th>
-        <th style="width:88px">Data</th>
-        <th class="th-cliente">Cliente</th>
-        <th style="width:88px">Caçamba<br>Retirada</th>
-        <th style="width:88px">Caçamba<br>Entregue</th>
-        <th style="width:130px">Assinatura<br>do Cliente</th>
+        <th style="width:4%">Nº</th>
+        <th style="width:9%">Data</th>
+        <th class="th-cliente" style="width:19%">Cliente</th>
+        <th class="th-cliente" style="width:19%">Local</th>
+        <th style="width:16%">Container<br>Retirou</th>
+        <th style="width:16%">Container<br>Deixou</th>
+        <th style="width:17%">Assinatura<br>do Cliente</th>
       </tr>
     </thead>
     <tbody>
