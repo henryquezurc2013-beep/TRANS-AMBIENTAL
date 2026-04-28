@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-export type NivelUsuario = 'ADMIN' | 'OPERACAO' | 'MANUTENCAO'
+export type NivelUsuario = 'ADMIN' | 'OPERACAO' | 'MANUTENCAO' | 'MOTORISTA'
 
 export interface Usuario {
   id: string
@@ -109,6 +109,19 @@ export const db = {
     },
     async update(id: string, payload: Partial<Usuario>): Promise<void> {
       const { error } = await supabase.from('usuarios').update(payload).eq('id', id)
+      if (error) throw error
+    },
+    async getMotoristas(): Promise<Usuario[]> {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('nivel', 'MOTORISTA')
+        .order('usuario', { ascending: true })
+      if (error) throw error
+      return data ?? []
+    },
+    async setAtivo(id: string, ativo: 'SIM' | 'NAO'): Promise<void> {
+      const { error } = await supabase.from('usuarios').update({ ativo }).eq('id', id)
       if (error) throw error
     },
   },

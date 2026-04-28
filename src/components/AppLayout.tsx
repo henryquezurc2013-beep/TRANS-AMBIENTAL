@@ -35,6 +35,7 @@ const GRUPOS = [
       { path: '/clientes',          label: 'Clientes',        icon: 'users',  perm: 'Clientes'        },
       { path: '/relatorios',        label: 'Relatórios',      icon: 'file',   perm: 'Relatorios'      },
       { path: '/logs',              label: 'Logs',            icon: 'scroll', perm: 'Logs'            },
+      { path: '/motoristas',        label: 'Motoristas',      icon: 'truck',  perm: 'Motoristas'      },
       { path: '/trocas-pendentes',  label: 'App Motoristas',  icon: 'bell',   perm: 'Trocas_Pendentes' },
     ],
   },
@@ -53,6 +54,7 @@ const PATH_LABELS: Record<string, string> = {
   '/lancamento-manutencao': 'Lançar Manut.',
   '/relatorios':            'Relatórios',
   '/logs':                  'Logs',
+  '/motoristas':            'Motoristas',
   '/trocas-pendentes':      'App Motoristas',
 }
 
