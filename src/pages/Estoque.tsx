@@ -31,10 +31,35 @@ export default function Estoque() {
   }, [])
 
   async function imprimirRelatorio() {
-    const [todosContainers, registrosAbertos] = await Promise.all([
+    const [todosContainers, registrosAbertos, todosClientes] = await Promise.all([
       db.containers.getAll(),
       db.controle.getEmAberto(),
+      db.clientes.getAll(),
     ])
+
+    const mapaClientes = new Map(
+      todosClientes.map(c => [c.nome_cliente.trim().toUpperCase(), c])
+    )
+
+    function extrairCidade(bairroCidade: string | null | undefined): string {
+      if (!bairroCidade || !bairroCidade.trim()) return '—'
+      const partes = bairroCidade.trim()
+        .split(/\s*[\/,–-]\s*/)
+        .map(p => p.trim())
+        .filter(Boolean)
+      if (partes.length === 0) return '—'
+      if (partes.length === 1) return partes[0]
+      const ultima = partes[partes.length - 1]
+      if (/^[A-Z]{2}$/.test(ultima)) return partes[partes.length - 2]
+      return partes[partes.length - 1]
+    }
+
+    function resolverCidade(clienteNome: string | undefined | null): string {
+      if (!clienteNome) return '—'
+      const cliente = mapaClientes.get(clienteNome.trim().toUpperCase())
+      if (!cliente) return '—'
+      return extrairCidade(cliente.bairro_cidade)
+    }
 
     const ordenados = [...todosContainers].sort((a, b) =>
       (a.id_container ?? '').toString().localeCompare(
@@ -64,9 +89,9 @@ export default function Estoque() {
         <tr>
           <td style="text-align:center;"><span class="checkbox"></span></td>
           <td class="num">${c.id_container ?? '-'}</td>
-          <td>${c.tipo_container ?? '-'}</td>
           <td><span class="status status-${statusKey}">${c.status_operacional ?? '-'}</span></td>
           <td>${ctrl?.cliente ?? '—'}</td>
+          <td>${resolverCidade(ctrl?.cliente)}</td>
           <td>${formatDate(ctrl?.data_entrega)}</td>
           <td>${formatDate(ctrl?.previsao_retirada)}</td>
           <td>${c.local_patio ?? '-'}</td>
@@ -165,14 +190,14 @@ export default function Estoque() {
 <table>
   <thead>
     <tr>
-      <th style="width:6%; text-align:center;">Confer.</th>
-      <th style="width:8%">Nº Container</th>
-      <th style="width:10%">Tipo</th>
-      <th style="width:12%">Status</th>
-      <th style="width:28%">Cliente Atual</th>
+      <th style="width:7%; text-align:center;">Confer.</th>
+      <th style="width:9%">Nº Container</th>
+      <th style="width:13%">Status</th>
+      <th style="width:24%">Cliente Atual</th>
+      <th style="width:14%">Cidade</th>
       <th style="width:12%">Data Entrega</th>
       <th style="width:12%">Prev. Retirada</th>
-      <th style="width:12%">Pátio</th>
+      <th style="width:9%">Pátio</th>
     </tr>
   </thead>
   <tbody>
