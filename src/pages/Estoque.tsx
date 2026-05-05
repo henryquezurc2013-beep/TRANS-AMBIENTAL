@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { db, Container, Controle } from '../services/dataService'
+import { supabase } from '../lib/supabase'
 import StatusBadge from '../components/StatusBadge'
 
 type SortDir = 'asc' | 'desc' | 'none'
@@ -14,6 +15,7 @@ function SortIcon({ dir }: { dir: SortDir }) {
 export default function Estoque() {
   const [containers, setContainers] = useState<Container[]>([])
   const [controles, setControles]   = useState<Controle[]>([])
+  const [ultimaMov, setUltimaMov]   = useState<Record<string, string>>({})
   const [loading, setLoading]       = useState(true)
   const [busca, setBusca]           = useState('')
   const [filtro, setFiltro]         = useState('TODOS')
@@ -22,9 +24,39 @@ export default function Estoque() {
 
   useEffect(() => {
     async function carregar() {
-      const [c, co] = await Promise.all([db.containers.getAll(), db.controle.getEmAberto()])
+      const [c, co, mov] = await Promise.all([
+        db.containers.getAll(),
+        db.controle.getEmAberto(),
+        supabase
+          .from('controle')
+          .select('id_container, data_entrega, data_retirada, criado_em')
+          .order('criado_em', { ascending: false }),
+      ])
       setContainers(c)
       setControles(co)
+
+      const mapaUlt: Record<string, number> = {}
+      const mapaUltStr: Record<string, string> = {}
+      for (const m of (mov.data ?? []) as Array<{ id_container: string; data_entrega: string | null; data_retirada: string | null; criado_em: string | null }>) {
+        const candidatas = [m.data_entrega, m.data_retirada, m.criado_em]
+          .filter((d): d is string => !!d)
+        let maisRecenteMs = -Infinity
+        let maisRecenteStr: string | null = null
+        for (const d of candidatas) {
+          const t = new Date(d).getTime()
+          if (!isNaN(t) && t > maisRecenteMs) {
+            maisRecenteMs = t
+            maisRecenteStr = d
+          }
+        }
+        if (maisRecenteStr === null) continue
+        const atual = mapaUlt[m.id_container]
+        if (atual === undefined || maisRecenteMs > atual) {
+          mapaUlt[m.id_container] = maisRecenteMs
+          mapaUltStr[m.id_container] = maisRecenteStr
+        }
+      }
+      setUltimaMov(mapaUltStr)
       setLoading(false)
     }
     carregar()
@@ -376,7 +408,7 @@ export default function Estoque() {
                 </th>
                 <th>Local Pátio</th>
                 <th>Conservação</th>
-                <th>Pintura</th>
+                <th>Última Movimentação</th>
               </tr>
             </thead>
             <tbody>
@@ -391,7 +423,11 @@ export default function Estoque() {
                   <td style={{ fontSize: '0.8rem' }}>{clienteAtual[c.id_container] ?? '—'}</td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.local_patio || '—'}</td>
                   <td>{badgeConservacao(c.estado_conservacao)}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{c.pintura_status}</td>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
+                    {ultimaMov[c.id_container]
+                      ? new Date(ultimaMov[c.id_container]).toLocaleDateString('pt-BR')
+                      : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>
