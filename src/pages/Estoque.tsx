@@ -15,7 +15,7 @@ function SortIcon({ dir }: { dir: SortDir }) {
 export default function Estoque() {
   const [containers, setContainers] = useState<Container[]>([])
   const [controles, setControles]   = useState<Controle[]>([])
-  const [ultimaMov, setUltimaMov]   = useState<Record<string, string>>({})
+  const [movimentacoes, setMovimentacoes] = useState<Array<{ id_container: string | null; data_entrega: string | null }>>([])
   const [loading, setLoading]       = useState(true)
   const [busca, setBusca]           = useState('')
   const [filtro, setFiltro]         = useState('TODOS')
@@ -29,23 +29,12 @@ export default function Estoque() {
         db.controle.getEmAberto(),
         supabase
           .from('controle')
-          .select('id_container, data_entrega, criado_em')
-          .order('criado_em', { ascending: false }),
+          .select('id_container, data_entrega')
+          .order('created_at', { ascending: false }),
       ])
       setContainers(c)
       setControles(co)
-
-      const movimentacoes = (mov.data ?? []) as Array<{ id_container: string | null; data_entrega: string | null; criado_em: string | null }>
-      const mapaUlt: Record<string, string> = {}
-      const vistos = new Set<string>()
-      for (const m of movimentacoes) {
-        if (!m.id_container) continue
-        const chave = m.id_container.toString()
-        if (vistos.has(chave)) continue
-        vistos.add(chave)
-        if (m.data_entrega) mapaUlt[chave] = m.data_entrega
-      }
-      setUltimaMov(mapaUlt)
+      setMovimentacoes((mov.data ?? []) as Array<{ id_container: string | null; data_entrega: string | null }>)
       setLoading(false)
     }
     carregar()
@@ -413,9 +402,16 @@ export default function Estoque() {
                   <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.local_patio || '—'}</td>
                   <td>{badgeConservacao(c.estado_conservacao)}</td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
-                    {ultimaMov[c.id_container]
-                      ? new Date(ultimaMov[c.id_container]).toLocaleDateString('pt-BR')
-                      : '—'}
+                    {(() => {
+                      const ultima = movimentacoes.find(
+                        m => m.id_container?.toString() === c.numero_container?.toString()
+                      )
+                      console.log('Container:', c.numero_container, 'Ultima:', ultima)
+                      const dataUltima = ultima?.data_entrega
+                        ? new Date(ultima.data_entrega).toLocaleDateString('pt-BR')
+                        : '—'
+                      return dataUltima
+                    })()}
                   </td>
                 </tr>
               ))}
