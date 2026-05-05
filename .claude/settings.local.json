@@ -29,7 +29,14 @@
       "Bash(eas --version)",
       "Bash(eas build *)",
       "Bash(git rm *)",
-      "Bash(rm app.json)"
+      "Bash(rm app.json)",
+      "Bash(node -e \"const t=\\(n\\)=>\\(n??'Operador'\\).split\\(/\\\\s+/\\)[0].toLowerCase\\(\\).replace\\(/^./,c=>c.toUpperCase\\(\\)\\); console.log\\(JSON.stringify\\({ADMIN:t\\('ADMIN'\\),'henryque soares':t\\('henryque soares'\\),OPERACAO:t\\('OPERACAO'\\),vazio:t\\(''\\),null:t\\(null\\)},null,2\\)\\)\")",
+      "Bash(where gh *)",
+      "Bash(cmdkey /list)",
+      "Bash(findstr /I \"github\")",
+      "Bash(findstr /I /C:\"git\" /C:\"github\")",
+      "PowerShell(cmdkey /delete:\"LegacyGeneric:target=git:https://github.com/smartcontainer26/cacamba-smart.git\")",
+      "PowerShell(git push origin principal)"
     ]
   }
 }
