@@ -26,6 +26,7 @@ export default function Atrasados() {
   const [loading, setLoading] = useState(true)
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [novaData, setNovaData] = useState('')
+  const [containerFixo, setContainerFixo] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [relatorioAberto, setRelatorioAberto] = useState(false)
 
@@ -45,14 +46,37 @@ export default function Atrasados() {
   function iniciarEdicao(id: string, dataAtual: string) {
     setEditandoId(id)
     setNovaData(dataAtual)
+    setContainerFixo(false)
   }
 
   function cancelarEdicao() {
     setEditandoId(null)
     setNovaData('')
+    setContainerFixo(false)
   }
 
   async function salvarData(c: Controle) {
+    if (containerFixo) {
+      setSalvando(true)
+      try {
+        await db.controle.update(c.id, { container_fixo: true, previsao_retirada: null })
+        await registrarLog(
+          sessao!.usuarioAtual,
+          'CONTAINER FIXO',
+          `Container ${c.id_container} | Cliente ${c.cliente} | Marcado como fixo`
+        )
+        toast('Container marcado como fixo', 'success')
+        setEditandoId(null)
+        setNovaData('')
+        setContainerFixo(false)
+        await carregar()
+      } catch {
+        toast('Erro ao marcar como fixo', 'error')
+      }
+      setSalvando(false)
+      return
+    }
+
     if (!novaData) { toast('Selecione uma data', 'error'); return }
     if (novaData <= hoje()) {
       toast('A nova data deve ser maior que hoje', 'error')
@@ -60,7 +84,7 @@ export default function Atrasados() {
     }
     setSalvando(true)
     try {
-      await db.controle.update(c.id, { previsao_retirada: novaData })
+      await db.controle.update(c.id, { container_fixo: false, previsao_retirada: novaData })
       await registrarLog(
         sessao!.usuarioAtual,
         'DATA RETIRADA ATUALIZADA',
@@ -69,6 +93,7 @@ export default function Atrasados() {
       toast('Data de retirada atualizada com sucesso', 'success')
       setEditandoId(null)
       setNovaData('')
+      setContainerFixo(false)
       await carregar()
     } catch {
       toast('Erro ao atualizar data', 'error')
@@ -130,17 +155,35 @@ export default function Atrasados() {
                     <span>·</span>
 
                     {estaEditando ? (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
                         <span>Nova prev.:</span>
                         <input
                           type="date"
                           className="input-field"
-                          style={{ width: '150px', padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
-                          value={novaData}
+                          style={{
+                            width: '150px',
+                            padding: '0.2rem 0.5rem',
+                            fontSize: '0.8rem',
+                            opacity: containerFixo ? 0.5 : 1,
+                          }}
+                          value={containerFixo ? '' : novaData}
                           min={(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10) })()}
                           onChange={e => setNovaData(e.target.value)}
+                          disabled={containerFixo}
                           autoFocus
                         />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', userSelect: 'none', fontSize: '0.8rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={containerFixo}
+                            onChange={e => {
+                              setContainerFixo(e.target.checked)
+                              if (e.target.checked) setNovaData('')
+                            }}
+                          />
+                          <span>Container fixo (sem previsão de retirada)</span>
+                        </label>
+                        {containerFixo && <span className="badge badge-warning">FIXO</span>}
                         <button className="btn-success" style={{ padding: '0.2rem 0.45rem' }} disabled={salvando} onClick={() => salvarData(c)} title="Confirmar">
                           <Icon name="check" size={13} />
                         </button>
