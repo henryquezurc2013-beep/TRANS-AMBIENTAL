@@ -29,34 +29,23 @@ export default function Estoque() {
         db.controle.getEmAberto(),
         supabase
           .from('controle')
-          .select('id_container, data_entrega, data_retirada, criado_em')
+          .select('id_container, data_entrega, criado_em')
           .order('criado_em', { ascending: false }),
       ])
       setContainers(c)
       setControles(co)
 
-      const mapaUlt: Record<string, number> = {}
-      const mapaUltStr: Record<string, string> = {}
-      for (const m of (mov.data ?? []) as Array<{ id_container: string; data_entrega: string | null; data_retirada: string | null; criado_em: string | null }>) {
-        const candidatas = [m.data_entrega, m.data_retirada, m.criado_em]
-          .filter((d): d is string => !!d)
-        let maisRecenteMs = -Infinity
-        let maisRecenteStr: string | null = null
-        for (const d of candidatas) {
-          const t = new Date(d).getTime()
-          if (!isNaN(t) && t > maisRecenteMs) {
-            maisRecenteMs = t
-            maisRecenteStr = d
-          }
-        }
-        if (maisRecenteStr === null) continue
-        const atual = mapaUlt[m.id_container]
-        if (atual === undefined || maisRecenteMs > atual) {
-          mapaUlt[m.id_container] = maisRecenteMs
-          mapaUltStr[m.id_container] = maisRecenteStr
-        }
+      const movimentacoes = (mov.data ?? []) as Array<{ id_container: string | null; data_entrega: string | null; criado_em: string | null }>
+      const mapaUlt: Record<string, string> = {}
+      const vistos = new Set<string>()
+      for (const m of movimentacoes) {
+        if (!m.id_container) continue
+        const chave = m.id_container.toString()
+        if (vistos.has(chave)) continue
+        vistos.add(chave)
+        if (m.data_entrega) mapaUlt[chave] = m.data_entrega
       }
-      setUltimaMov(mapaUltStr)
+      setUltimaMov(mapaUlt)
       setLoading(false)
     }
     carregar()
