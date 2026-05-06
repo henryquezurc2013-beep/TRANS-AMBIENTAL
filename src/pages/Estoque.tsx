@@ -1,10 +1,23 @@
 import { useEffect, useState, useMemo } from 'react'
-import { db, Container, Controle } from '../services/dataService'
+import { db, Container, Controle, Cliente } from '../services/dataService'
 import { supabase } from '../lib/supabase'
 import StatusBadge from '../components/StatusBadge'
 
 type SortDir = 'asc' | 'desc' | 'none'
 type SortCol = 'numero' | 'id_container' | 'status' | 'capacidade' | 'cliente'
+
+function extrairCidade(bairroCidade: string | null | undefined): string {
+  if (!bairroCidade || !bairroCidade.trim()) return '—'
+  const partes = bairroCidade.trim()
+    .split(/\s*[\/,–-]\s*/)
+    .map(p => p.trim())
+    .filter(Boolean)
+  if (partes.length === 0) return '—'
+  if (partes.length === 1) return partes[0]
+  const ultima = partes[partes.length - 1]
+  if (/^[A-Z]{2}$/.test(ultima)) return partes[partes.length - 2]
+  return partes[partes.length - 1]
+}
 
 function SortIcon({ dir }: { dir: SortDir }) {
   if (dir === 'asc')  return <span style={{ marginLeft: '0.25rem', opacity: 0.8 }}>↑</span>
@@ -15,6 +28,7 @@ function SortIcon({ dir }: { dir: SortDir }) {
 export default function Estoque() {
   const [containers, setContainers] = useState<Container[]>([])
   const [controles, setControles]   = useState<Controle[]>([])
+  const [clientes, setClientes]     = useState<Cliente[]>([])
   const [movimentacoes, setMovimentacoes] = useState<Array<{ id_container: string | null; data_entrega: string | null }>>([])
   const [loading, setLoading]       = useState(true)
   const [busca, setBusca]           = useState('')
@@ -24,16 +38,18 @@ export default function Estoque() {
 
   useEffect(() => {
     async function carregar() {
-      const [c, co, mov] = await Promise.all([
+      const [c, co, mov, cli] = await Promise.all([
         db.containers.getAll(),
         db.controle.getEmAberto(),
         supabase
           .from('controle')
           .select('id_container, data_entrega')
           .order('created_at', { ascending: false }),
+        db.clientes.getAll(),
       ])
       setContainers(c)
       setControles(co)
+      setClientes(cli)
       setMovimentacoes((mov.data ?? []) as Array<{ id_container: string | null; data_entrega: string | null }>)
       setLoading(false)
     }
@@ -236,6 +252,20 @@ export default function Estoque() {
   const clienteAtual: Record<string, string> = {}
   controles.forEach(c => { clienteAtual[c.id_container] = c.cliente })
 
+  const cidadePorContainer = useMemo(() => {
+    const mapaClientes = new Map(
+      clientes.map(cl => [cl.nome_cliente.trim().toUpperCase(), cl])
+    )
+    const mapa = new Map<string, string>()
+    controles.forEach(ctrl => {
+      if (!ctrl.cliente) return
+      const cliente = mapaClientes.get(ctrl.cliente.trim().toUpperCase())
+      if (!cliente) return
+      mapa.set(ctrl.id_container, extrairCidade(cliente.bairro_cidade))
+    })
+    return mapa
+  }, [controles, clientes])
+
   const total       = containers.length
   const disponiveis = containers.filter(c => c.status_operacional === 'DISPONIVEL').length
   const emUso       = containers.filter(c => c.status_operacional === 'EM USO').length
@@ -397,7 +427,11 @@ export default function Estoque() {
                   <td style={{ fontSize: '0.8rem' }}>{c.capacidade}</td>
                   <td><StatusBadge status={c.status_operacional} /></td>
                   <td style={{ fontSize: '0.8rem' }}>{clienteAtual[c.id_container] ?? '—'}</td>
-                  <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>{c.local_patio || '—'}</td>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
+                    {c.status_operacional === 'EM USO'
+                      ? (cidadePorContainer.get(c.id_container) ?? '—')
+                      : (c.local_patio || '—')}
+                  </td>
                   <td>{badgeConservacao(c.estado_conservacao)}</td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--fg-muted)' }}>
                     {(() => {
