@@ -102,6 +102,90 @@ export default function TrocaContainer() {
     setLoading(false)
   }
 
+  async function cancelarTroca(log: Log) {
+    const partes = log.detalhes.match(/Container ([\w-]+) trocado por ([\w-]+) no cliente (.+)/)
+    if (!partes) {
+      toast('Não foi possível interpretar o log da troca', 'error')
+      return
+    }
+    const ctOld = partes[1]
+    const ctNew = partes[2]
+    const cliente = partes[3]
+
+    const ok = confirm(
+      `Cancelar a troca ${ctOld} → ${ctNew} para ${cliente}?\n\n` +
+      `• Container ${ctNew} voltará para DISPONÍVEL\n` +
+      `• Container ${ctOld} voltará para EM USO\n` +
+      `• Controle do container novo será encerrado\n` +
+      `• Controle do container antigo será reaberto`
+    )
+    if (!ok) return
+
+    setLoading(true)
+    try {
+      const todos = await db.controle.getAll()
+
+      const controleNovo = todos.find(c =>
+        c.id_container === ctNew &&
+        c.data_retirada === null &&
+        c.origem_acao === 'TROCA - NOVO CONTAINER NO CLIENTE' &&
+        c.cliente === cliente
+      )
+      if (!controleNovo) {
+        alert(
+          `Não é possível cancelar esta troca.\n\n` +
+          `O container ${ctNew} já foi movimentado após a troca ` +
+          `(o controle aberto não corresponde mais à troca original).`
+        )
+        setLoading(false)
+        return
+      }
+
+      const controleAntigo = todos
+        .filter(c =>
+          c.id_container === ctOld &&
+          c.origem_acao === 'TROCA - RETORNOU AO PATIO' &&
+          c.cliente === cliente
+        )
+        .sort((a, b) => (b.data_retirada ?? '').localeCompare(a.data_retirada ?? ''))[0]
+
+      if (!controleAntigo) {
+        alert(
+          `Não é possível cancelar esta troca.\n\n` +
+          `O registro do controle do container ${ctOld} (que retornou ao pátio) não foi encontrado.`
+        )
+        setLoading(false)
+        return
+      }
+
+      await db.controle.update(controleNovo.id, {
+        data_retirada: hoje(),
+        origem_acao: 'TROCA CANCELADA',
+      })
+      await db.controle.update(controleAntigo.id, {
+        data_retirada: null,
+        origem_acao: 'TROCA CANCELADA - CONTROLE REABERTO',
+      })
+      await db.containers.updateByIdContainer(ctNew, {
+        status_operacional: 'DISPONIVEL',
+        liberado_para_entrega: 'SIM',
+      })
+      await db.containers.updateByIdContainer(ctOld, {
+        status_operacional: 'EM USO',
+        liberado_para_entrega: 'NAO',
+      })
+
+      await registrarLog(sessao!.usuarioAtual, 'CANCELAR TROCA',
+        `Troca cancelada: ${ctOld} ← ${ctNew} no cliente ${cliente}`)
+
+      toast(`Troca cancelada: ${ctOld} restaurado no cliente`, 'success')
+      await carregar()
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Erro ao cancelar troca', 'error')
+    }
+    setLoading(false)
+  }
+
   return (
     <div className="page-container">
       <div style={{ marginBottom: '1.75rem' }}>
@@ -243,6 +327,7 @@ export default function TrocaContainer() {
                 const cli   = partes?.[3] ?? log.detalhes
                 const data  = new Date(log.data_hora)
                 const dataFmt = `${String(data.getDate()).padStart(2,'0')}/${String(data.getMonth()+1).padStart(2,'0')} ${String(data.getHours()).padStart(2,'0')}:${String(data.getMinutes()).padStart(2,'0')}`
+                const podeCancelar = !!partes && (Date.now() - data.getTime()) < 24 * 60 * 60 * 1000
                 return (
                   <div key={log.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '0.75rem', background: 'var(--card-2)', borderRadius: '0.625rem', border: '1px solid var(--border-faint)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
@@ -251,10 +336,34 @@ export default function TrocaContainer() {
                       <span className="badge" style={{ background: 'hsl(142 55% 45% / 0.15)', color: 'var(--success-fg)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)' }}>{ctNew}</span>
                     </div>
                     <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--fg-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cli}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.7rem', color: 'var(--fg-dim)' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{dataFmt}</span>
-                      <span>·</span>
-                      <span>{log.usuario}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.7rem', color: 'var(--fg-dim)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)' }}>{dataFmt}</span>
+                        <span>·</span>
+                        <span>{log.usuario}</span>
+                      </div>
+                      {podeCancelar && (
+                        <button
+                          type="button"
+                          onClick={() => cancelarTroca(log)}
+                          disabled={loading}
+                          style={{
+                            padding: '0.2rem 0.55rem',
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            background: 'hsl(8 72% 56% / 0.12)',
+                            color: 'var(--destructive-fg)',
+                            border: '1px solid hsl(8 72% 56% / 0.35)',
+                            borderRadius: '0.375rem',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            opacity: loading ? 0.6 : 1,
+                            whiteSpace: 'nowrap',
+                          }}
+                          title="Cancelar esta troca (disponível por 24h)"
+                        >
+                          Cancelar
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
