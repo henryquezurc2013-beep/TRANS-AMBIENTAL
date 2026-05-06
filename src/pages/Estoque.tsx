@@ -40,12 +40,15 @@ export default function Estoque() {
     carregar()
   }, [])
 
-  async function imprimirRelatorio() {
-    const [todosContainers, registrosAbertos, todosClientes] = await Promise.all([
-      db.containers.getAll(),
+  async function imprimirRelatorio(lista: typeof containers) {
+    const [registrosAbertos, todosClientes] = await Promise.all([
       db.controle.getEmAberto(),
       db.clientes.getAll(),
     ])
+
+    const labelFiltro = filtro === 'DISPONIVEL' ? 'Disponíveis'
+                      : filtro === 'EM USO'     ? 'Em Uso'
+                      : 'Todos'
 
     const mapaClientes = new Map(
       todosClientes.map(c => [c.nome_cliente.trim().toUpperCase(), c])
@@ -71,13 +74,7 @@ export default function Estoque() {
       return extrairCidade(cliente.bairro_cidade)
     }
 
-    const ordenados = [...todosContainers].sort((a, b) =>
-      (a.id_container ?? '').toString().localeCompare(
-        (b.id_container ?? '').toString(),
-        'pt-BR',
-        { numeric: true }
-      )
-    )
+    const ordenados = lista
 
     const total = ordenados.length
     const emUso = ordenados.filter(c => (c.status_operacional ?? '').toUpperCase().includes('USO')).length
@@ -186,8 +183,8 @@ export default function Estoque() {
 </div>
 
 <div class="titulo">
-  <h2>Relatório de Estoque de Containers</h2>
-  <p>Emitido em ${dataAtual} · Posição completa do pátio</p>
+  <h2>Relatório de Estoque — ${labelFiltro}</h2>
+  <p>Emitido em ${dataAtual}</p>
 </div>
 
 <div class="resumo">
@@ -196,6 +193,7 @@ export default function Estoque() {
   <div class="box disp"><div class="num">${disponiveis}</div><div class="label">Disponíveis</div></div>
   <div class="box manut"><div class="num">${manutencao}</div><div class="label">Manutenção</div></div>
 </div>
+<p style="text-align:center; font-size:10px; color:#666; margin:-6px 0 14px;">Exibindo ${lista.length} containers</p>
 
 <table>
   <thead>
@@ -342,7 +340,7 @@ export default function Estoque() {
         </div>
         <input className="input-field" style={{ maxWidth: '260px' }} placeholder="Buscar container ou cliente..." value={busca} onChange={e => setBusca(e.target.value)} />
         <button
-          onClick={imprimirRelatorio}
+          onClick={() => imprimirRelatorio(ordenado)}
           style={{
             marginLeft: 'auto',
             padding: '0.5rem 1rem',
@@ -406,7 +404,6 @@ export default function Estoque() {
                       const ultima = movimentacoes.find(
                         m => m.id_container?.toString() === c.numero_container?.toString()
                       )
-                      console.log('Container:', c.numero_container, 'Ultima:', ultima)
                       const dataUltima = ultima?.data_entrega
                         ? new Date(ultima.data_entrega).toLocaleDateString('pt-BR')
                         : '—'
