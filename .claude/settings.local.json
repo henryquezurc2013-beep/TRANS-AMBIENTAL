@@ -37,7 +37,8 @@
       "Bash(findstr /I /C:\"git\" /C:\"github\")",
       "PowerShell(cmdkey /delete:\"LegacyGeneric:target=git:https://github.com/smartcontainer26/cacamba-smart.git\")",
       "PowerShell(git push origin principal)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "PowerShell(cmdkey /delete:\"LegacyGeneric:target=git:https://github.com\")"
     ]
   }
 }
