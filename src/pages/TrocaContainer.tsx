@@ -61,6 +61,9 @@ export default function TrocaContainer() {
       const clienteNome = registroAntigo.cliente
       const contNovo = containers.find(c => c.id_container === containerNovo)!
 
+      const previsaoRetirada = new Date()
+      previsaoRetirada.setDate(previsaoRetirada.getDate() + 30)
+
       await db.controle.update(registroAntigo.id, {
         data_retirada: dataTroca,
         origem_acao: 'TROCA - RETORNOU AO PATIO',
@@ -74,7 +77,7 @@ export default function TrocaContainer() {
         contato_cliente: registroAntigo.contato_cliente,
         telefone_cliente: registroAntigo.telefone_cliente,
         data_entrega: dataTroca,
-        previsao_retirada: registroAntigo.previsao_retirada,
+        previsao_retirada: previsaoRetirada.toISOString().slice(0, 10),
         data_retirada: null,
         material: material || registroAntigo.material,
         observacao: [motivo, obs].filter(Boolean).join(' — '),
